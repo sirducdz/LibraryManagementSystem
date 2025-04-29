@@ -8,7 +8,9 @@ const { Title, Text } = Typography
 const Register = () => {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-console.log( console.log("Register component rendered");
+// console.log( console.log("Register component rendered");
+console.log("Register component rendered");
+
 
   const onFinish = (values) => {
     setLoading(true)
