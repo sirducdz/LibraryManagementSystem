@@ -8,29 +8,29 @@ import Footer from "./Footer"
 const Layout = () => {
   const [collapsed, setCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const navigate = useNavigate()
+  // const navigate = useNavigate()
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-      if (window.innerWidth < 768) {
-        setCollapsed(true)
-      }
-    }
+  // useEffect(() => {
+  //   const checkMobile = () => {
+  //     setIsMobile(window.innerWidth < 768)
+  //     if (window.innerWidth < 768) {
+  //       setCollapsed(true)
+  //     }
+  //   }
 
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
+  //   checkMobile()
+  //   window.addEventListener("resize", checkMobile)
 
-    // Kiểm tra xem người dùng đã đăng nhập chưa
-    const token = localStorage.getItem("token")
-    if (!token) {
-      navigate("/login")
-    }
+  //   // Kiểm tra xem người dùng đã đăng nhập chưa
+  //   const token = localStorage.getItem("token")
+  //   if (!token) {
+  //     navigate("/login")
+  //   }
 
-    return () => {
-      window.removeEventListener("resize", checkMobile)
-    }
-  }, [navigate])
+  //   return () => {
+  //     window.removeEventListener("resize", checkMobile)
+  //   }
+  // }, [navigate])
 
   return (
     <AntLayout style={{ minHeight: "100vh" }}>

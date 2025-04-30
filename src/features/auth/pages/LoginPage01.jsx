@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   LockOutlined,
   UserOutlined,
@@ -14,130 +15,36 @@ import {
   Alert,
   Divider,
 } from "antd";
-import { useEffect } from "react";
 // import { Link } from "react-router-dom"; // Import nếu cần
 import { useLoginMutation } from "../api/authApiSlice"; // Điều chỉnh đường dẫn nếu cần
-import { UseAuth } from "../../../contexts/AuthContext";
-import { jwtDecode } from "jwt-decode";
-import { useNavigate } from "react-router-dom";
+
 const { Title } = Typography;
 
 const LoginPage = () => {
-  const [loginTrigger, { isLoading, error, isError, reset }] =
+  const [loginTrigger, { isLoading, error, data, isSuccess, isError, reset }] =
     useLoginMutation();
   const [form] = Form.useForm();
-  const navigate = useNavigate(); // *** THÊM: Hook để điều hướng ***
-  const {
-    login: loginContext,
-    isLoading: isAuthLoading,
-    isAuthenticated,
-  } = UseAuth();
-  useEffect(() => {
-    // Chỉ kiểm tra khi AuthContext không còn đang tải và người dùng đã được xác thực
-    if (!isAuthLoading && isAuthenticated) {
-      console.log(
-        "User is already authenticated, redirecting from Login page..."
-      );
-      // Điều hướng đến trang dashboard (hoặc trang chính)
-      // replace: true -> thay thế trang login trong lịch sử trình duyệt,
-      // người dùng không thể nhấn back để quay lại trang login
-      navigate("/dashboard", { replace: true });
-    }
-  }, [isAuthenticated, isAuthLoading, navigate]);
-  const onFinish = async (values) => {
-    console.log("Submitting login (Decode Token):", values);
+
+  // ... (phần logic onFinish, onFinishFailed, useEffect, getErrorMessage giữ nguyên) ...
+  const onFinish = (values) => {
+    console.log("Submitting login credentials:", values);
     const credentials = {
       username: values.username,
       password: values.password,
     };
-    const rememberMe = values.remember;
-
-    if (isError) {
-      reset();
-    }
-
-    try {
-      const response = await loginTrigger(credentials).unwrap();
-      console.log("Login successful!", response);
-
-      // API chỉ trả về accessToken và refreshToken
-      const { accessToken, refreshToken } = response;
-
-      if (accessToken && refreshToken) {
-        // --- DECODE ACCESS TOKEN ---
-        let decodedUser = null;
-        try {
-          const decodedPayload = jwtDecode(accessToken);
-          console.log("Decoded Access Token Payload:", decodedPayload);
-
-          // --- Trích xuất thông tin user từ payload ---
-          // !!! Tên các trường (sub, name, email, role) PHỤ THUỘC VÀO BACKEND CỦA BẠN !!!
-          decodedUser = {
-            id: decodedPayload.nameid || null, // Lấy ID từ trường "nameid"
-            username: decodedPayload.unique_name || null, // Lấy username từ "unique_name"
-            email: decodedPayload.email || null, // Lấy email từ "email"
-            // Chuyển role thành mảng roles để linh hoạt hơn (ngay cả khi chỉ có 1 role)
-            roles: decodedPayload.role ? [decodedPayload.role] : [],
-            // Bạn có thể thêm các trường khác nếu cần và có trong payload
-            // Ví dụ: Nếu muốn có trường 'name' giống 'username':
-            // name: decodedPayload.unique_name || null
-          };
-
-          // Kiểm tra xem có lấy được thông tin cơ bản không (ví dụ: id)
-          if (!decodedUser.id) {
-            console.warn(
-              "Could not extract 'nameid' (user ID) from token payload."
-            );
-            decodedUser = null; // Đặt lại là null nếu thiếu thông tin quan trọng
-          }
-        } catch (decodeError) {
-          console.error("Failed to decode access token:", decodeError);
-          // Xử lý lỗi decode - có thể token không phải JWT hoặc bị lỗi
-          // throw new Error("Invalid token format received."); // Throw lỗi để báo thất bại
-          // Hoặc không làm gì cả và để điều kiện if (decodedUser) xử lý
-        }
-
-        // --- TIẾP TỤC NẾU DECODE THÀNH CÔNG ---
-        if (decodedUser) {
-          // 1. Lưu tokens vào storage
-          const storage = rememberMe ? localStorage : sessionStorage;
-          storage.setItem("accessToken", accessToken);
-          storage.setItem("refreshToken", refreshToken);
-          // Lưu luôn userData đã decode vào storage để AuthContext có thể đọc khi init
-          storage.setItem("userData", JSON.stringify(decodedUser));
-          console.log(
-            `Tokens and decoded user saved to ${
-              rememberMe ? "localStorage" : "sessionStorage"
-            }.`
-          );
-          // 2. Cập nhật AuthContext với user đã decode
-          loginContext(decodedUser, accessToken);
-        } else {
-          // Xử lý trường hợp không decode được user hợp lệ từ token
-          console.error(
-            "Could not get valid user info from token. Login process aborted."
-          );
-          // Có thể hiển thị lỗi cụ thể hơn cho người dùng
-        }
-      } else {
-        console.error("Login response missing tokens:", response);
-      }
-    } catch (err) {
-      console.error("Failed to login:", err);
-      // Alert sẽ hiển thị lỗi
-    }
+    loginTrigger(credentials);
   };
 
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
 
-  // useEffect(() => {
-  //   if (isSuccess && data) {
-  //     console.log("Login successful with RTK Query!", data);
-  //     // Logic chuyển hướng
-  //   }
-  // }, [isSuccess, data]);
+  useEffect(() => {
+    if (isSuccess && data) {
+      console.log("Login successful with RTK Query!", data);
+      // Logic chuyển hướng
+    }
+  }, [isSuccess, data]);
 
   const getErrorMessage = (error) => {
     if (!error) return "An unknown error occurred.";

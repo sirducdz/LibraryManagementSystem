@@ -1,10 +1,10 @@
 // src/routes/ProtectedRoute.jsx (Ví dụ cho Cách 1)
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext'; // Sử dụng hook useAuth
+import { UseAuth } from '../contexts/AuthContext'; // Sử dụng hook useAuth
 
 const ProtectedRoute = ({ allowedRoles }) => {
-  const { isAuthenticated, user, isLoading } = useAuth(); // Lấy state từ context
+  const { isAuthenticated, user, isLoading } = UseAuth(); // Lấy state từ context
   const location = useLocation();
 
   // Quan trọng: Xử lý trạng thái loading ban đầu
