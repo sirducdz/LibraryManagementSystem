@@ -7,6 +7,7 @@ import React, {
   useMemo,
 } from "react";
 import { jwtDecode } from "jwt-decode";
+import { useCart } from "./CartContext";
 // --- Định nghĩa Actions cho Reducer ---
 const ACTIONS = {
   INITIALIZE: "INITIALIZE", // Khởi tạo state từ localStorage
@@ -222,9 +223,11 @@ export const AuthProvider = ({ children }) => {
       payload: { user: userData, token: token },
     });
   };
+  const { clearCart } = useCart();
   // Hàm xử lý đăng xuất
   const logout = () => {
     console.log("Dispatching LOGOUT action");
+    clearCart(); // Xóa giỏ hàng khi đăng xuất
     // TODO: Có thể gọi API để hủy token phía server ở đây nếu cần
     dispatch({ type: ACTIONS.LOGOUT });
     // Có thể thêm logic điều hướng về trang login ở đây nếu muốn

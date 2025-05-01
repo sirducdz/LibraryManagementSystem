@@ -20,9 +20,9 @@
 // );
 
 import React from "react";
-import {createRoot} from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import AppRoutes from "./routes/index";
-import {BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 // 2. Import CSS Global và CSS Ant Design
 import "./index.css"; // Chứa Tailwind directives và/hoặc style global khác
 // 3. Import Provider toàn cục (Quan trọng!)
@@ -30,7 +30,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 // import { AnotherProvider } from './contexts/AnotherContext'; // Ví dụ nếu có provider khác
 import { Provider as ReduxProvider } from "react-redux";
 import { store } from "./store";
-import Layout from "./components/layout/Layout";
+import { CartProvider } from "./contexts/CartContext";
+import { App } from "antd";
 // 4. Lấy phần tử DOM gốc từ index.html
 const rootElement = document.getElementById("root");
 
@@ -39,19 +40,20 @@ const rootElement = document.getElementById("root");
 if (rootElement) {
   createRoot(rootElement).render(
     // 6. Bọc ứng dụng bằng StrictMode (khuyến nghị cho dev)
-      <ReduxProvider store={store}>
-        {/* ReduxProvider nếu có store Redux */}
-        <BrowserRouter>
-          {/* 7. Bọc ứng dụng bằng các Provider toàn cục */}
-          {/* AuthProvider cần bao ngoài App để toàn bộ App truy cập được context */}
-          <AuthProvider>
-            {/* <AnotherProvider> */}
-            {/* <AppRoutes /> Component App chính chứa toàn bộ ứng dụng */}
-            <Layout/>
-            {/* </AnotherProvider> */}
-          </AuthProvider>
-        </BrowserRouter>
-      </ReduxProvider>
+    <ReduxProvider store={store}>
+      {/* ReduxProvider nếu có store Redux */}
+      <BrowserRouter>
+        {/* 7. Bọc ứng dụng bằng các Provider toàn cục */}
+        {/* AuthProvider cần bao ngoài App để toàn bộ App truy cập được context */}
+        <App>
+          <CartProvider>
+            <AuthProvider>
+              <AppRoutes />
+            </AuthProvider>
+          </CartProvider>
+        </App>
+      </BrowserRouter>
+    </ReduxProvider>
   );
 } else {
   console.error(

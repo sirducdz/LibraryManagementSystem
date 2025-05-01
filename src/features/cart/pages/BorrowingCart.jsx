@@ -2,8 +2,8 @@ import { useEffect, useState } from "react"; // Bỏ useState nếu không dùng
 import { Card, List, Button, Avatar, Typography, Divider, Empty, Modal, Form, Input, App } from "antd"; // Thêm App
 import { DeleteOutlined, ExclamationCircleOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../contexts/CartContext"; // *** Import useCart ***
-import { PATHS } from "../routes/routePaths"; // *** Import PATHS nếu cần điều hướng ở Empty state ***
+import { useCart } from "../../../contexts/CartContext"; // *** Import useCart ***
+import { PATHS } from "../../../routes/routePaths"; // *** Import PATHS nếu cần điều hướng ở Empty state ***
 
 const { Title, Text } = Typography;
 // Bỏ const { confirm } = Modal; vì sẽ dùng modalApi

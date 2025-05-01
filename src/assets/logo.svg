@@ -1,0 +1,10 @@
+<svg width="180" height="50" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="50" height="50" rx="10" fill="#2563EB"/>
+  <path d="M15 15H35V35H15V15Z" fill="white"/>
+  <path d="M20 20H30V30H20V20Z" fill="#2563EB"/>
+  <path d="M25 10L30 15H20L25 10Z" fill="white"/>
+  <path d="M25 40L30 35H20L25 40Z" fill="white"/>
+  <path d="M10 25L15 30V20L10 25Z" fill="white"/>
+  <path d="M40 25L35 30V20L40 25Z" fill="white"/>
+  <text x="60" y="30" font-family="Arial" font-weight="bold" font-size="18" fill="#2563EB">LibraryMS</text>
+</svg>

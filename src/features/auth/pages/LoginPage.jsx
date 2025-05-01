@@ -41,7 +41,7 @@ const LoginPage = () => {
       // Điều hướng đến trang dashboard (hoặc trang chính)
       // replace: true -> thay thế trang login trong lịch sử trình duyệt,
       // người dùng không thể nhấn back để quay lại trang login
-      navigate("/dashboard", { replace: true });
+      navigate("/homepage", { replace: true });
     }
   }, [isAuthenticated, isAuthLoading, navigate]);
   const onFinish = async (values) => {

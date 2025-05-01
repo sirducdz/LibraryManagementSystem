@@ -1,11 +1,11 @@
 // src/routes/index.jsx
 import React from "react";
-import {Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 // Import Layouts
-import Layout from "../components/layout/Layout";
+// import Layout from "../components/layout/Layout";
+import Layout from "../components/layout/Layout1";
 // Import Pages (Ví dụ đường dẫn, bạn cần điều chỉnh cho đúng)
 import LoginPage from "../features/auth/pages/LoginPage"; // Giả sử bạn đặt Login vào features
-import LoginPage1 from "../features/auth/pages/LoginPage01";
 // import RegisterPage from '../features/auth/pages/Register'; // Giả sử bạn đặt Register vào features
 // import BookCatalog from "../features/books/pages/BookCatalog";
 // import BookDetail from "../features/books/pages/BookDetail";
@@ -23,6 +23,8 @@ import ProtectedRoute from "./ProtectedRoute";
 // Import Paths Constants
 // import { PATHS } from "./routes/routePaths"; // Đảm bảo bạn đã tạo file này
 import { PATHS } from "./routePaths"; // Đảm bảo bạn đã tạo file này
+import HomePage from "../pages/Homepage";
+import BorrowingCart from "../features/cart/pages/BorrowingCart";
 function AppRoutes() {
   return (
     // BrowserRouter thường được đặt ở đây hoặc trong main.jsx bao ngoài AppRoutes
@@ -32,6 +34,17 @@ function AppRoutes() {
       {/* Có thể nhóm trong AuthLayout nếu cần */}
       {/* <Route element={<AuthLayout />}> */}
       <Route path={PATHS.LOGIN} element={<LoginPage />} />
+      <Route element={<Layout />}>
+        {/* Áp dụng Layout */}
+        {/* Trang chủ là public và dùng Layout */}
+        <Route path={PATHS.HomePage} element={<HomePage />} />
+        <Route path={PATHS.BORROWING_CART} element={<BorrowingCart />} />
+        {/* Thêm các trang public khác cần Layout chính ở đây */}
+        {/* <Route path="/about" element={<AboutPage />} /> */}
+        {/* <Route path="/contact" element={<ContactPage />} /> */}
+        {/* Nếu muốn trang 404 cũng có layout và public thì đặt ở đây */}
+        {/* <Route path="*" element={<NotFoundPage />} /> */}
+      </Route>
       {/* <Route path={PATHS.LOGIN1} element={<LoginPage1 />} /> */}
       {/* <Route path={PATHS.REGISTER} element={<RegisterPage />} /> */}
       {/* </Route> */}
@@ -43,8 +56,9 @@ function AppRoutes() {
           {/* Cấp 2: Áp dụng Layout chính */}
           {/* Routes for ALL Authenticated Users (Admin & Normal) */}
           {/* index: Route mặc định khi truy cập path của cha gần nhất ("/") */}
-          <Route index element={<Navigate replace to={PATHS.LOGIN1} />} />
+          {/* <Route index element={<Navigate replace to={PATHS.boo} />} /> */}
           {/* Chuyển về trang sách mặc định */}
+
           {/* <Route path={PATHS.BOOKS} element={<BookCatalog />} /> */}
           {/* Giả sử bạn định nghĩa PATHS.BOOK_DETAIL = "/books/:bookId" */}
           {/* <Route path={PATHS.BOOK_DETAIL} element={<BookDetail />} /> */}
