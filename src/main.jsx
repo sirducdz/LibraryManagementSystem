@@ -48,7 +48,7 @@ if (rootElement) {
         <App>
           <CartProvider>
             <AuthProvider>
-              <AppRoutes />
+            <AppRoutes />
             </AuthProvider>
           </CartProvider>
         </App>

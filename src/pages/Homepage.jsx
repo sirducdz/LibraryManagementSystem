@@ -38,7 +38,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
-  const { isAuthenticated } = UseAuth();
+  const { isAuthenticated } = UseAuth(); // Lấy trạng thái đăng nhập
   const { cartItems, cartItemCount, addToCart, isInCart } = useCart();
   const { message: messageApi, modal: modalApi } = App.useApp(); // Lấy message và modal
 
@@ -56,9 +56,8 @@ const HomePage = () => {
     setCategories(mockCategories);
 
     // Fetch Books Mock (Lấy toàn bộ rồi xử lý sau)
-    // (Sử dụng lại logic tạo mock data giống BookCatalog)
     setTimeout(() => {
-      const mockBooks = Array(55) // Tạo nhiều sách
+      const mockBooks = Array(55)
         .fill()
         .map((_, index) => ({
           id: index + 1,
@@ -78,29 +77,25 @@ const HomePage = () => {
           description: `Short description about book ${index + 1}.`,
           year: 2024 - (index % 10),
         }));
-      setAllMockBooks(mockBooks); // Lưu tất cả sách mock
-      // Ban đầu hiển thị một phần sách làm "featured"
-      setFeaturedBooks(mockBooks.slice(0, 8)); // Ví dụ: hiển thị 8 cuốn đầu
+      setAllMockBooks(mockBooks);
+      setFeaturedBooks(mockBooks.slice(0, 8));
       setLoading(false);
     }, 1000);
-  }, []); // Chỉ chạy 1 lần
+  }, []);
 
   // --- Lọc sách nổi bật theo category ---
   const displayedBooks = useMemo(() => {
     if (!selectedCategoryId) {
-      // Nếu không chọn category, trả về danh sách featured ban đầu (hoặc toàn bộ nếu muốn)
-      return allMockBooks.slice(0, 8); // Giữ nguyên 8 cuốn đầu
+      return allMockBooks.slice(0, 8);
     }
-    // Lọc toàn bộ sách theo category đã chọn
     const filtered = allMockBooks.filter(
       (book) => book.categoryId === selectedCategoryId
     );
-    return filtered.slice(0, 8); // Chỉ lấy tối đa 8 cuốn đã lọc
+    return filtered.slice(0, 8);
   }, [selectedCategoryId, allMockBooks]);
 
   // --- Handlers ---
   const handleCategoryClick = (categoryId) => {
-    // Nếu nhấn lại category đang chọn thì bỏ chọn (hiển thị tất cả featured)
     setSelectedCategoryId((prevId) =>
       prevId === categoryId ? null : categoryId
     );
@@ -121,13 +116,34 @@ const HomePage = () => {
     });
   };
 
-  // Xử lý nút "Borrow" trên từng thẻ sách (Giống BookCatalog)
+  // Xử lý nút "Borrow" trên từng thẻ sách
   const handleBorrowButtonClick = (book) => {
     if (isAuthenticated) {
-      // Logic kiểm tra giỏ hàng đầy đã nằm trong addToCart của context
       addToCart(book);
     } else {
       showLoginRequiredModal(`add "${book.title}" to the cart`);
+    }
+  };
+
+  // --- **Hàm xử lý mới cho nút "Browse All Books"** ---
+  const handleNavigateToCatalog = () => {
+    if (isAuthenticated) {
+      navigate(PATHS.BOOK_CATALOG);
+    } else {
+      // Có thể bạn muốn cho phép duyệt sách mà không cần đăng nhập
+      // Nếu vậy, chỉ cần gọi navigate trực tiếp ở đây:
+      // navigate(PATHS.BOOK_CATALOG);
+      // Nếu bắt buộc đăng nhập để duyệt, thì gọi modal:
+      showLoginRequiredModal("browse all books");
+    }
+  };
+
+  // --- **Hàm xử lý mới cho nút "View Borrowing Cart"** ---
+  const handleNavigateToCart = () => {
+    if (isAuthenticated) {
+      navigate(PATHS.BORROWING_CART);
+    } else {
+      showLoginRequiredModal("view your borrowing cart");
     }
   };
 
@@ -151,7 +167,8 @@ const HomePage = () => {
             <Button
               type="primary"
               size="large"
-              onClick={() => navigate(PATHS.BOOK_CATALOG)}
+              // --- **Sử dụng handler mới** ---
+              onClick={handleNavigateToCatalog}
             >
               Browse All Books <ArrowRightOutlined />
             </Button>
@@ -160,7 +177,8 @@ const HomePage = () => {
               <Button
                 size="large"
                 type="default"
-                onClick={() => navigate(PATHS.BORROWING_CART)}
+                // --- **Sử dụng handler mới** ---
+                onClick={handleNavigateToCart}
               >
                 View Borrowing Cart <ShoppingCartOutlined />
               </Button>
@@ -176,20 +194,17 @@ const HomePage = () => {
             Explore by Category
           </Title>
           <div className="flex flex-wrap justify-center md:justify-start gap-2">
-            {/* Nút xem tất cả */}
             <Button
               key="all-cat"
               type={selectedCategoryId === null ? "primary" : "default"}
               icon={<BookOutlined />}
-              onClick={() => handleCategoryClick(null)} // Đặt selectedCategoryId về null
+              onClick={() => handleCategoryClick(null)}
             >
               All Featured
             </Button>
-            {/* Lặp qua các category */}
             {categories.map((category) => (
               <Button
                 key={category.id}
-                // Đổi 'type' thay vì 'variant' cho Ant Design
                 type={
                   selectedCategoryId === category.id ? "primary" : "default"
                 }
@@ -215,29 +230,23 @@ const HomePage = () => {
                   } Books`
                 : "Featured Books"}
             </Title>
+            {/* Nút này có thể không cần check login vì chỉ điều hướng đến catalog */}
             <Button type="dashed" onClick={() => navigate(PATHS.BOOK_CATALOG)}>
               View All Books <ArrowRightOutlined />
             </Button>
           </div>
 
           {loading ? (
-            // Skeleton Loading (Giống BookCatalog)
             <Row gutter={[16, 24]}>
-              {Array.from({ length: 8 }).map(
-                (
-                  _,
-                  index // Hiển thị 8 skeleton
-                ) => (
-                  <Col xs={12} sm={12} md={8} lg={6} key={index}>
-                    <Card>
-                      <Skeleton active avatar paragraph={{ rows: 2 }} />
-                    </Card>
-                  </Col>
-                )
-              )}
+              {Array.from({ length: 8 }).map((_, index) => (
+                <Col xs={12} sm={12} md={8} lg={6} key={index}>
+                  <Card>
+                    <Skeleton active avatar paragraph={{ rows: 2 }} />
+                  </Card>
+                </Col>
+              ))}
             </Row>
           ) : displayedBooks.length === 0 ? (
-            // Empty State
             <div className="col-span-full text-center py-12">
               <Empty
                 description={`No books found ${
@@ -246,11 +255,10 @@ const HomePage = () => {
               />
             </div>
           ) : (
-            // Book Grid
             <Row gutter={[16, 24]}>
               {displayedBooks.map((book) => {
                 const isBookInCart = isInCart(book.id);
-                const isBorrowDisabled = !book.available || isBookInCart; // Không cần check cart full ở đây vì nút riêng biệt
+                const isBorrowDisabled = !book.available || isBookInCart;
 
                 let borrowButtonTitle = "Add to borrowing cart";
                 if (!book.available)
@@ -260,7 +268,6 @@ const HomePage = () => {
 
                 return (
                   <Col xs={12} sm={12} md={8} lg={6} key={book.id}>
-                    {/* Sử dụng lại cấu trúc Card từ BookCatalog */}
                     <Badge.Ribbon
                       text={book.available ? "Available" : "Borrowed"}
                       color={book.available ? "green" : "red"}
@@ -293,7 +300,7 @@ const HomePage = () => {
                             icon={<ShoppingCartOutlined />}
                             disabled={isBorrowDisabled}
                             onClick={(e) => {
-                              e.stopPropagation(); // Ngăn sự kiện click của Card
+                              e.stopPropagation();
                               handleBorrowButtonClick(book);
                             }}
                             title={borrowButtonTitle}
@@ -310,15 +317,13 @@ const HomePage = () => {
                             >
                               {book.title}
                             </Link>
-                          } // Tăng font title
+                          }
                           description={
                             <>
                               <p className="text-gray-600 mb-1 text-sm">
                                 {book.author}
                               </p>
                               <div className="flex items-center flex-wrap mb-1 text-xs">
-                                {" "}
-                                {/* Giảm font size rating */}
                                 <Rate
                                   allowHalf
                                   disabled
@@ -351,34 +356,25 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 4. How It Works Section (Tái tạo với Ant Design và Tailwind) */}
+      {/* 4. How It Works Section */}
       <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
         <div className="container px-4 mx-auto">
-          {/* Tiêu đề chính màu trắng */}
           <Title level={2} className="!text-white text-center mb-12">
             How It Works
           </Title>
           <Row gutter={[32, 32]} justify="center">
-            {/* Item 1 */}
             <Col xs={24} md={8} className="text-center">
-              {/* Vòng tròn số thứ tự */}
               <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 ring-4 ring-white/30">
-                {/* Số màu trắng */}
                 <Text className="!text-white text-2xl font-bold">1</Text>
               </div>
-              {/* Tiêu đề bước màu trắng */}
               <Title level={4} className="!text-white mb-2">
                 Browse Books
               </Title>
-              {/* Đoạn mô tả cũng màu trắng (thêm opacity nhẹ để phân cấp nếu muốn) */}
               <Paragraph className="!text-white opacity-95">
-                {" "}
-                {/* Đặt thành !text-white, có thể thêm opacity */}
                 Explore our extensive collection of books across various
                 categories.
               </Paragraph>
             </Col>
-            {/* Item 2 */}
             <Col xs={24} md={8} className="text-center">
               <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 ring-4 ring-white/30">
                 <Text className="!text-white text-2xl font-bold">2</Text>
@@ -387,13 +383,10 @@ const HomePage = () => {
                 Request to Borrow
               </Title>
               <Paragraph className="!text-white opacity-95">
-                {" "}
-                {/* Đặt thành !text-white, có thể thêm opacity */}
                 Add up to 5 books to your borrowing cart and submit your request
                 easily.
               </Paragraph>
             </Col>
-            {/* Item 3 */}
             <Col xs={24} md={8} className="text-center">
               <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 ring-4 ring-white/30">
                 <Text className="!text-white text-2xl font-bold">3</Text>
@@ -402,8 +395,6 @@ const HomePage = () => {
                 Read & Return
               </Title>
               <Paragraph className="!text-white opacity-95">
-                {" "}
-                {/* Đặt thành !text-white, có thể thêm opacity */}
                 Enjoy your books for the designated period after librarian
                 approval.
               </Paragraph>

@@ -8,9 +8,9 @@ import { Outlet } from "react-router-dom";
 
 // --- Điều chỉnh đường dẫn import cho đúng với cấu trúc dự án của bạn ---
 // Giả sử Sidebar, Header, Footer nằm trong src/components/
-import Sidebar from "./Sidebar1";
-import Header from "./Header1";
-import Footer from "./Footer1";
+import Sidebar from "./Sidebar";
+import Header from "./Header";
+import Footer from "./Footer";
 import { UseAuth } from "../../contexts/AuthContext";
 // Component Layout chính (đã đổi tên thành MainLayout)
 const Layout = () => {

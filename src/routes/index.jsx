@@ -3,7 +3,7 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 // Import Layouts
 // import Layout from "../components/layout/Layout";
-import Layout from "../components/layout/Layout1";
+import Layout from "../components/layout/Layout";
 // Import Pages (Ví dụ đường dẫn, bạn cần điều chỉnh cho đúng)
 import LoginPage from "../features/auth/pages/LoginPage"; // Giả sử bạn đặt Login vào features
 // import RegisterPage from '../features/auth/pages/Register'; // Giả sử bạn đặt Register vào features
@@ -25,6 +25,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import { PATHS } from "./routePaths"; // Đảm bảo bạn đã tạo file này
 import HomePage from "../pages/Homepage";
 import BorrowingCart from "../features/cart/pages/BorrowingCart";
+import BookCatalog from "../features/books/pages/BookCatalog";
 function AppRoutes() {
   return (
     // BrowserRouter thường được đặt ở đây hoặc trong main.jsx bao ngoài AppRoutes
@@ -38,7 +39,7 @@ function AppRoutes() {
         {/* Áp dụng Layout */}
         {/* Trang chủ là public và dùng Layout */}
         <Route path={PATHS.HomePage} element={<HomePage />} />
-        <Route path={PATHS.BORROWING_CART} element={<BorrowingCart />} />
+      
         {/* Thêm các trang public khác cần Layout chính ở đây */}
         {/* <Route path="/about" element={<AboutPage />} /> */}
         {/* <Route path="/contact" element={<ContactPage />} /> */}
@@ -53,6 +54,8 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         {/* Cấp 1: Yêu cầu đăng nhập */}
         <Route element={<Layout />}>
+        <Route path={PATHS.BOOKS_CATALOG} element={<BookCatalog />} />
+        <Route path={PATHS.BORROWING_CART} element={<BorrowingCart />} />
           {/* Cấp 2: Áp dụng Layout chính */}
           {/* Routes for ALL Authenticated Users (Admin & Normal) */}
           {/* index: Route mặc định khi truy cập path của cha gần nhất ("/") */}

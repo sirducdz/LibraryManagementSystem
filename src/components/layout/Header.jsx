@@ -183,7 +183,7 @@ const Header = ({ collapsed, setCollapsed, isAuthenticated, user }) => {
        {isAuthenticated ? (
           // --- Đã đăng nhập ---
           <>
-            {isNormalUser && (
+            {/* {isNormalUser && (
               <Button
                 type="default"
                 icon={<ShoppingCartOutlined />}
@@ -191,7 +191,7 @@ const Header = ({ collapsed, setCollapsed, isAuthenticated, user }) => {
               >
                 Giỏ mượn
               </Button>
-            )}
+            )} */}
 
             <Dropdown
               menu={{ items: notificationItems, onClick: handleNotificationMenuClick }}

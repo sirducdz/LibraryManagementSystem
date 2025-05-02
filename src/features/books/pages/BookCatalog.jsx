@@ -28,9 +28,9 @@ import {
   ExclamationCircleFilled,
 } from "@ant-design/icons";
 // import { api } from '../../services/api'; // Tạm thời không dùng api thật
-import { useCart } from "../contexts/CartContext"; // <-- Import useCart (Kiểm tra đường dẫn)
-import { UseAuth } from "../contexts/AuthContext";
-import { PATHS } from "../routes/routePaths"; // <-- Sử dụng PATHS
+import { useCart } from "../../../contexts/CartContext";// <-- Import useCart (Kiểm tra đường dẫn)
+import { UseAuth } from "../../../contexts/AuthContext";
+import { PATHS } from "../../../routes/routePaths"; // <-- Sử dụng PATHS
 
 const { Meta } = Card;
 const { Option } = Select;
@@ -56,7 +56,8 @@ const BookCatalog = () => {
   const navigate = useNavigate(); // <-- Hook để điều hướng
   // --- Lấy từ CartContext ---
   const { cartItems, addToCart, isInCart } = useCart(); // Lấy state và hàm từ context
-  const { message: messageApi, notification, modal } = App.useApp(); // Lấy modal từ đây
+  // const { message: messageApi, notification, modal } = App.useApp(); // Lấy modal từ đây **
+  const {  modal } = App.useApp(); // Lấy modal từ đây
 
   // --- Giả lập Fetch dữ liệu Mock ---
   useEffect(() => {
