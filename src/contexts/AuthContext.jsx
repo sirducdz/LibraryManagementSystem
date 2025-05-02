@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { jwtDecode } from "jwt-decode";
 import { useCart } from "./CartContext";
+import { useLogoutMutation } from "../features/auth/api/authApiSlice";
 // --- Định nghĩa Actions cho Reducer ---
 const ACTIONS = {
   INITIALIZE: "INITIALIZE", // Khởi tạo state từ localStorage
@@ -224,16 +225,46 @@ export const AuthProvider = ({ children }) => {
     });
   };
   const { clearCart } = useCart();
+  const [logoutApiCall, { isLoading: isLoggingOutApi }] = useLogoutMutation();
   // Hàm xử lý đăng xuất
-  const logout = () => {
-    console.log("Dispatching LOGOUT action");
-    clearCart(); // Xóa giỏ hàng khi đăng xuất
-    // TODO: Có thể gọi API để hủy token phía server ở đây nếu cần
-    dispatch({ type: ACTIONS.LOGOUT });
-    // Có thể thêm logic điều hướng về trang login ở đây nếu muốn
-    // navigate('/login');
-  };
+  // const logout = async () => {
+  //   console.log("Dispatching LOGOUT action");
+  //   clearCart(); // Xóa giỏ hàng khi đăng xuất
+  //   try {
+  //     console.log("AuthContext: Calling logout API endpoint...");
+  //     await logoutApiCall().unwrap(); // Gọi API và chờ kết quả (unwrap để bắt lỗi)
+  //     console.log("AuthContext: API logout call successful.");
+  //   } catch (error) {
+  //     // Ghi log lỗi gọi API nhưng vẫn tiếp tục logout phía client
+  //     console.error("AuthContext: Logout API call failed:", error);
+  //   } finally {
+  //     // Luôn dispatch action LOGOUT của context để xóa state và storage client
+  //     console.log(
+  //       "AuthContext: Dispatching LOGOUT action to clear context state and storage."
+  //     );
+  //     dispatch({ type: ACTIONS.LOGOUT });
+  //   }
+  // };
+  const logout = async () => { // Thêm async nếu muốn đợi API
+    console.log("AuthContext: logout called");
+    clearCart(); // Xóa giỏ hàng client
 
+    // Gọi API logout backend (nếu có endpoint và muốn gọi)
+    try {
+        console.log("AuthContext: Calling logout API endpoint...");
+        await logoutApiCall().unwrap(); // Gọi API và chờ kết quả (unwrap để bắt lỗi)
+        console.log("AuthContext: API logout call successful.");
+    } catch (error) {
+        // Ghi log lỗi gọi API nhưng vẫn tiếp tục logout phía client
+        console.error("AuthContext: Logout API call failed:", error);
+    } finally {
+         // Luôn dispatch action LOGOUT của context để xóa state và storage client
+         console.log("AuthContext: Dispatching LOGOUT action to clear context state and storage.");
+         dispatch({ type: ACTIONS.LOGOUT });
+    }
+    // Điều hướng có thể thực hiện ở component Header hoặc ở đây
+    // navigate('/login');
+};
   // --- Tạo giá trị Context ---
   // Sử dụng useMemo để tối ưu, tránh object value thay đổi mỗi lần re-render không cần thiết
 

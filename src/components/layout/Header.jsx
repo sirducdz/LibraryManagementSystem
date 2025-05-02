@@ -15,6 +15,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { UseAuth } from "../../contexts/AuthContext";
+
 // Bỏ import type { MenuProps } from "antd"
 const { Header: AntHeader } = Layout;
 
@@ -180,7 +181,7 @@ const Header = ({ collapsed, setCollapsed, isAuthenticated, user }) => {
           style={{ color: "rgba(0, 0, 0, 0.65)" }}
           // onClick={() => { /* Thêm logic mở ô search */ }}
         />
-       {isAuthenticated ? (
+        {isAuthenticated ? (
           // --- Đã đăng nhập ---
           <>
             {/* {isNormalUser && (
@@ -194,21 +195,38 @@ const Header = ({ collapsed, setCollapsed, isAuthenticated, user }) => {
             )} */}
 
             <Dropdown
-              menu={{ items: notificationItems, onClick: handleNotificationMenuClick }}
-              placement="bottomRight" arrow={{ pointAtCenter: true }} trigger={["click"]}
+              menu={{
+                items: notificationItems,
+                onClick: handleNotificationMenuClick,
+              }}
+              placement="bottomRight"
+              arrow={{ pointAtCenter: true }}
+              trigger={["click"]}
               overlayStyle={{ minWidth: "300px" }}
             >
               <Badge count={3} size="small" offset={[-2, 2]}>
-                <BellOutlined style={{ fontSize: 20, color: "rgba(0, 0, 0, 0.65)", cursor: "pointer" }} />
+                <BellOutlined
+                  style={{
+                    fontSize: 20,
+                    color: "rgba(0, 0, 0, 0.65)",
+                    cursor: "pointer",
+                  }}
+                />
               </Badge>
             </Dropdown>
 
             <Dropdown
               menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
-              placement="bottomRight" arrow trigger={["click"]}
+              placement="bottomRight"
+              arrow
+              trigger={["click"]}
             >
               <div className="user-profile flex items-center cursor-pointer gap-2 px-2 h-[40px] rounded hover:bg-gray-100 transition-colors">
-                <Avatar size="default" icon={<UserOutlined />} src={user?.avatarUrl || undefined} >
+                <Avatar
+                  size="default"
+                  icon={<UserOutlined />}
+                  src={user?.avatarUrl || undefined}
+                >
                   {!user?.avatarUrl && user?.username?.[0]?.toUpperCase()}
                 </Avatar>
                 <div className="user-info hidden lg:block">
@@ -225,10 +243,7 @@ const Header = ({ collapsed, setCollapsed, isAuthenticated, user }) => {
         ) : (
           // --- Chưa đăng nhập ---
           <>
-            <Button
-              icon={<LoginOutlined />}
-              onClick={() => navigate('/login')}
-            >
+            <Button icon={<LoginOutlined />} onClick={() => navigate("/login")}>
               Đăng nhập
             </Button>
             {/* <Button

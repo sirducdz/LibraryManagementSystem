@@ -20,6 +20,7 @@ import { useLoginMutation } from "../api/authApiSlice"; // Điều chỉnh đư�
 import { UseAuth } from "../../../contexts/AuthContext";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import { PATHS } from "../../../routes/routePaths";
 const { Title } = Typography;
 
 const LoginPage = () => {
@@ -41,9 +42,10 @@ const LoginPage = () => {
       // Điều hướng đến trang dashboard (hoặc trang chính)
       // replace: true -> thay thế trang login trong lịch sử trình duyệt,
       // người dùng không thể nhấn back để quay lại trang login
-      navigate("/homepage", { replace: true });
+      navigate(PATHS.HomePage, { replace: true });
     }
   }, [isAuthenticated, isAuthLoading, navigate]);
+
   const onFinish = async (values) => {
     console.log("Submitting login (Decode Token):", values);
     const credentials = {
