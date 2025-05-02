@@ -5,22 +5,6 @@ import { jwtDecode } from "jwt-decode";
 // Giả sử bạn có một slice khác để lưu trữ thông tin user và token
 // import { setCredentials, logOut } from '../authSlice'; // Đường dẫn đến authSlice của bạn
 
-// Hàm chuẩn bị header, lấy token từ state (nếu cần)
-// const baseQuery = fetchBaseQuery({
-//   baseUrl: "https://localhost:7144/api", // URL gốc cho API xác thực của bạn
-//   prepareHeaders: (headers, { getState }) => {
-//     console.log("getState", getState());
-    
-//     // Lấy token từ state của Redux (ví dụ từ authSlice)
-//     const token = getState().auth?.accessToken; // Điều chỉnh đường dẫn state cho đúng
-//     if (token) {
-//       headers.set("authorization", `Bearer ${token}`);
-//     }
-//     // Bạn có thể set các header mặc định khác ở đây nếu cần
-//     // headers.set('Content-Type', 'application/json');
-//     return headers;
-//   },
-// });
 const baseQuery = fetchBaseQuery({
   baseUrl: "https://localhost:7144/api", // <<<=== URL API CỦA BẠN
   prepareHeaders: (headers, { getState }) => {

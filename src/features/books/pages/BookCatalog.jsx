@@ -28,7 +28,7 @@ import {
   ExclamationCircleFilled,
 } from "@ant-design/icons";
 // import { api } from '../../services/api'; // Tạm thời không dùng api thật
-import { useCart } from "../../../contexts/CartContext";// <-- Import useCart (Kiểm tra đường dẫn)
+import { useCart } from "../../../contexts/CartContext"; // <-- Import useCart (Kiểm tra đường dẫn)
 import { UseAuth } from "../../../contexts/AuthContext";
 import { PATHS } from "../../../routes/routePaths"; // <-- Sử dụng PATHS
 
@@ -57,7 +57,7 @@ const BookCatalog = () => {
   // --- Lấy từ CartContext ---
   const { cartItems, addToCart, isInCart } = useCart(); // Lấy state và hàm từ context
   // const { message: messageApi, notification, modal } = App.useApp(); // Lấy modal từ đây **
-  const {  modal } = App.useApp(); // Lấy modal từ đây
+  const { modal } = App.useApp(); // Lấy modal từ đây
 
   // --- Giả lập Fetch dữ liệu Mock ---
   useEffect(() => {
@@ -78,7 +78,8 @@ const BookCatalog = () => {
         .fill()
         .map((_, index) => ({
           id: index + 1,
-          title: `Book ${index + 1} about Programming ${String.fromCharCode( // <-- English UI Text
+          title: `Book ${index + 1} about Programming ${String.fromCharCode(
+            // <-- English UI Text
             65 + (index % 26)
           )}`,
           author: `Author ${(index % 7) + 1}`, // <-- English UI Text
@@ -88,7 +89,8 @@ const BookCatalog = () => {
           ratingCount: Math.floor(Math.random() * 250) + 5,
           available: index % 4 !== 0, // Cứ 4 cuốn thì 1 cuốn hết
           copies: index % 4 !== 0 ? Math.floor(Math.random() * 5 + 1) : 0, // Số lượng giả
-          coverImage: `https://placehold.co/150x200/EDEDED/AAAAAA/png?text=Book+${ // Sử dụng placehold.co
+          coverImage: `https://placehold.co/150x200/EDEDED/AAAAAA/png?text=Book+${
+            // Sử dụng placehold.co
             index + 1
           }`, // Ảnh placeholder
           description: `Short description about book ${index + 1}.`, // <-- English UI Text
@@ -188,23 +190,25 @@ const BookCatalog = () => {
   };
 
   // --- Hàm hiển thị modal yêu cầu đăng nhập (Tái sử dụng) ---
-  const showLoginRequiredModal = (actionDescription = "perform this action") => {
+  const showLoginRequiredModal = (
+    actionDescription = "perform this action"
+  ) => {
     console.log("User not logged in, showing confirmation modal.");
     modal.confirm({
-      title: 'Login Required',
+      title: "Login Required",
       icon: <ExclamationCircleFilled />,
       content: `You need to be logged in to ${actionDescription}. Do you want to go to the login page?`, // Mô tả hành động cụ thể hơn
-      okText: 'Login',
-      cancelText: 'Cancel',
+      okText: "Login",
+      cancelText: "Cancel",
       onOk() {
-        console.log('OK confirmed, navigating to login.');
+        console.log("OK confirmed, navigating to login.");
         navigate(PATHS.LOGIN);
       },
       onCancel() {
-        console.log('Cancel confirmed, staying on page.');
+        console.log("Cancel confirmed, staying on page.");
       },
     });
-  }
+  };
 
   // Xử lý nút Giỏ hàng chính
   const handleCartButtonClick = () => {
@@ -212,7 +216,7 @@ const BookCatalog = () => {
       console.log("User logged in, navigating to cart.");
       navigate(PATHS.BORROWING_CART); // <-- Sử dụng PATHS
     } else {
-      showLoginRequiredModal('view your borrowing cart'); // Gọi hàm tái sử dụng
+      showLoginRequiredModal("view your borrowing cart"); // Gọi hàm tái sử dụng
     }
   };
 
@@ -228,7 +232,7 @@ const BookCatalog = () => {
     } else {
       showLoginRequiredModal(`add "${book.title}" to the cart`); // Nếu chưa đăng nhập, hiển thị modal
     }
-  }
+  };
 
   // --- Render ---
   return (
@@ -275,7 +279,8 @@ const BookCatalog = () => {
               value={params.categoryId} // Controlled
               loading={!categories.length && loading} // Loading nếu chưa có categories
             >
-              <Option value="all">All Categories</Option> {/* <-- English UI Text */}
+              <Option value="all">All Categories</Option>{" "}
+              {/* <-- English UI Text */}
               {categories.map((category) => (
                 <Option key={category.id} value={category.id.toString()}>
                   {category.name} {/* Hiển thị tên tiếng Anh đã đổi */}
@@ -292,15 +297,18 @@ const BookCatalog = () => {
               value={params.available} // Controlled
             >
               <Option value="all">All</Option> {/* <-- English UI Text */}
-              <Option value="available">Available</Option> {/* <-- English UI Text */}
-              <Option value="unavailable">Borrowed</Option> {/* <-- English UI Text */}
+              <Option value="available">Available</Option>{" "}
+              {/* <-- English UI Text */}
+              <Option value="unavailable">Borrowed</Option>{" "}
+              {/* <-- English UI Text */}
             </Select>
           </div>
         </div>
         {/* Sort & Count */}
         <div className="flex flex-wrap justify-between items-center gap-4">
           <div>
-            <span className="mr-2 text-sm text-gray-600">Sort by:</span> {/* <-- English UI Text */}
+            <span className="mr-2 text-sm text-gray-600">Sort by:</span>{" "}
+            {/* <-- English UI Text */}
             <Select
               onChange={handleSortChange}
               className="w-40"
@@ -308,14 +316,18 @@ const BookCatalog = () => {
             >
               <Option value="title">Title</Option> {/* <-- English UI Text */}
               <Option value="author">Author</Option> {/* <-- English UI Text */}
-              <Option value="rating">Rating (High-Low)</Option> {/* <-- English UI Text */}
-              <Option value="year">Year (New-Old)</Option> {/* <-- English UI Text */}
-              <Option value="createdAt_desc">Newest (ID)</Option> {/* <-- English UI Text */}
+              <Option value="rating">Rating (High-Low)</Option>{" "}
+              {/* <-- English UI Text */}
+              <Option value="year">Year (New-Old)</Option>{" "}
+              {/* <-- English UI Text */}
+              <Option value="createdAt_desc">Newest (ID)</Option>{" "}
+              {/* <-- English UI Text */}
             </Select>
           </div>
           <div className="text-sm text-gray-500">
             {/* Hiển thị số lượng sách đã lọc */}
-            {!loading && `Found ${processedBooks.length} books`} {/* <-- English UI Text */}
+            {!loading && `Found ${processedBooks.length} books`}{" "}
+            {/* <-- English UI Text */}
           </div>
         </div>
       </div>
@@ -364,7 +376,9 @@ const BookCatalog = () => {
                       // Phần cover tách biệt với actions và meta nên ribbon sẽ không đè meta
                       cover={
                         <div className="h-56 overflow-hidden p-4 bg-gray-100">
-                          <Link to={`${PATHS.BOOK_DETAIL}/${book.id}`}> {/* <-- Sử dụng PATHS */}
+                          <Link to={`${PATHS.BOOK_DETAIL}/${book.id}`}>
+                            {" "}
+                            {/* <-- Sử dụng PATHS */}
                             <img
                               alt={book.title}
                               src={book.coverImage || "/placeholder-book.png"}
@@ -374,8 +388,12 @@ const BookCatalog = () => {
                         </div>
                       }
                       actions={[
-                        <Link to={`${PATHS.BOOK_DETAIL}/${book.id}`} key="details"> {/* <-- Sử dụng PATHS */}
-                          <ReadOutlined /> Details {/* <-- English UI Text */}
+                        <Link
+                          to={PATHS.BOOK_DETAIL.replace(":bookId", book.id)}
+                          key="details"
+                          title="View Details"
+                        >
+                          <ReadOutlined /> Details
                         </Link>,
                         <Button
                           type="link"
@@ -393,29 +411,51 @@ const BookCatalog = () => {
                               : "Add to borrowing cart" // <-- English UI Text
                           }
                         >
-                          {isInCart(book.id) ? "Added" : "Borrow"} {/* <-- English UI Text */}
+                          {isInCart(book.id) ? "Added" : "Borrow"}{" "}
+                          {/* <-- English UI Text */}
                         </Button>,
                       ]}
                     >
                       {/* Meta bây giờ nằm bên trong Card, không bị Badge đè */}
-                       <Meta
-                         // Thêm padding top nhỏ để tránh bị gần ribbon quá nếu cần
-                         // style={{ paddingTop: '8px' }}
-                         title={<Link to={`${PATHS.BOOK_DETAIL}/${book.id}`} className="hover:text-primary transition-colors duration-200">{book.title}</Link>}
-                         description={
-                           <>
-                             <p className="text-gray-600 mb-1">{book.author}</p>
-                             <div className="flex items-center mb-1">
-                               <Rate allowHalf disabled defaultValue={parseFloat(book.rating)} style={{ fontSize: '1rem', marginRight: '8px' }} />
-                               <span className="text-yellow-500 font-semibold">{book.rating}</span>
-                               <span className="text-gray-500 ml-2"> ({book.ratingCount})</span>
-                             </div>
-                             <Tag color="blue">{book.category}</Tag>
-                             {/* Optionally show number of copies if available */}
-                             {book.available && <Tag color="geekblue" className="ml-1">Copies: {book.copies}</Tag>}
-                           </>
-                         }
-                       />
+                      <Meta
+                        // Thêm padding top nhỏ để tránh bị gần ribbon quá nếu cần
+                        // style={{ paddingTop: '8px' }}
+                        title={
+                          <Link
+                            to={`${PATHS.BOOK_DETAIL}/${book.id}`}
+                            className="hover:text-primary transition-colors duration-200"
+                          >
+                            {book.title}
+                          </Link>
+                        }
+                        description={
+                          <>
+                            <p className="text-gray-600 mb-1">{book.author}</p>
+                            <div className="flex items-center mb-1">
+                              <Rate
+                                allowHalf
+                                disabled
+                                defaultValue={parseFloat(book.rating)}
+                                style={{ fontSize: "1rem", marginRight: "8px" }}
+                              />
+                              <span className="text-yellow-500 font-semibold">
+                                {book.rating}
+                              </span>
+                              <span className="text-gray-500 ml-2">
+                                {" "}
+                                ({book.ratingCount})
+                              </span>
+                            </div>
+                            <Tag color="blue">{book.category}</Tag>
+                            {/* Optionally show number of copies if available */}
+                            {book.available && (
+                              <Tag color="geekblue" className="ml-1">
+                                Copies: {book.copies}
+                              </Tag>
+                            )}
+                          </>
+                        }
+                      />
                     </Card>
                   </Badge.Ribbon>
                 </Col>
@@ -433,8 +473,8 @@ const BookCatalog = () => {
                 total={processedBooks.length} // <-- Tổng là số sách ĐÃ LỌC
                 onChange={handlePageChange} // Gọi hàm xử lý đổi trang
                 showSizeChanger={false}
-                showTotal={(total, range) =>
-                  `${range[0]}-${range[1]} of ${total} books` // <-- English UI Text format
+                showTotal={
+                  (total, range) => `${range[0]}-${range[1]} of ${total} books` // <-- English UI Text format
                 }
               />
             </div>

@@ -26,6 +26,7 @@ import { PATHS } from "./routePaths"; // Đảm bảo bạn đã tạo file này
 import HomePage from "../pages/Homepage";
 import BorrowingCart from "../features/cart/pages/BorrowingCart";
 import BookCatalog from "../features/books/pages/BookCatalog";
+import BookDetail from "../features/books/pages/BookDetail";
 function AppRoutes() {
   return (
     // BrowserRouter thường được đặt ở đây hoặc trong main.jsx bao ngoài AppRoutes
@@ -39,7 +40,7 @@ function AppRoutes() {
         {/* Áp dụng Layout */}
         {/* Trang chủ là public và dùng Layout */}
         <Route path={PATHS.HomePage} element={<HomePage />} />
-      
+
         {/* Thêm các trang public khác cần Layout chính ở đây */}
         {/* <Route path="/about" element={<AboutPage />} /> */}
         {/* <Route path="/contact" element={<ContactPage />} /> */}
@@ -54,8 +55,8 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         {/* Cấp 1: Yêu cầu đăng nhập */}
         <Route element={<Layout />}>
-        <Route path={PATHS.BOOKS_CATALOG} element={<BookCatalog />} />
-        <Route path={PATHS.BORROWING_CART} element={<BorrowingCart />} />
+          <Route path={PATHS.BOOKS_CATALOG} element={<BookCatalog />} />
+          <Route path={PATHS.BORROWING_CART} element={<BorrowingCart />} />
           {/* Cấp 2: Áp dụng Layout chính */}
           {/* Routes for ALL Authenticated Users (Admin & Normal) */}
           {/* index: Route mặc định khi truy cập path của cha gần nhất ("/") */}
@@ -64,7 +65,7 @@ function AppRoutes() {
 
           {/* <Route path={PATHS.BOOKS} element={<BookCatalog />} /> */}
           {/* Giả sử bạn định nghĩa PATHS.BOOK_DETAIL = "/books/:bookId" */}
-          {/* <Route path={PATHS.BOOK_DETAIL} element={<BookDetail />} /> */}
+          <Route path={PATHS.BOOK_DETAIL} element={<BookDetail />} />
           {/* <Route path={PATHS.BORROWING_CART} element={<BorrowingCart />} /> */}
           {/* <Route path={PATHS.MY_REQUESTS} element={<MyRequests />} /> */}
           {/* Thêm các route chung khác nếu có: Profile, Settings... */}

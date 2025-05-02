@@ -128,7 +128,8 @@ const HomePage = () => {
   // --- **Hàm xử lý mới cho nút "Browse All Books"** ---
   const handleNavigateToCatalog = () => {
     if (isAuthenticated) {
-      navigate(PATHS.BOOK_CATALOG);
+      console.log("User is authenticated, navigating to catalog.");
+      navigate(PATHS.BOOKS_CATALOG);
     } else {
       // Có thể bạn muốn cho phép duyệt sách mà không cần đăng nhập
       // Nếu vậy, chỉ cần gọi navigate trực tiếp ở đây:
@@ -231,7 +232,7 @@ const HomePage = () => {
                 : "Featured Books"}
             </Title>
             {/* Nút này có thể không cần check login vì chỉ điều hướng đến catalog */}
-            <Button type="dashed" onClick={() => navigate(PATHS.BOOK_CATALOG)}>
+            <Button type="dashed" onClick={handleNavigateToCatalog}>
               View All Books <ArrowRightOutlined />
             </Button>
           </div>
@@ -288,7 +289,7 @@ const HomePage = () => {
                         }
                         actions={[
                           <Link
-                            to={`${PATHS.BOOK_DETAIL}/${book.id}`}
+                            to={PATHS.BOOK_DETAIL.replace(':bookId', book.id)}
                             key="details"
                             title="View Details"
                           >

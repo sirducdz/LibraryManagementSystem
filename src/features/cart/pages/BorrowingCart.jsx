@@ -97,7 +97,7 @@ const BorrowingCart = () => {
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen"> {/* Thêm style nền */}
-      <Card bordered={false} className="shadow-lg"> {/* Thêm shadow, bỏ border */}
+      <Card variant={false} className="shadow-lg"> {/* Thêm shadow, bỏ border */}
         <div className="flex flex-wrap justify-between items-center mb-6 gap-4"> {/* Tăng mb, thêm gap */}
           <Title level={2} className="mb-0">Borrowing Cart</Title> {/* <-- English */}
           {/* Chỉ hiển thị nút Clear All khi có item */}
@@ -195,7 +195,7 @@ const BorrowingCart = () => {
         ) : (
            // Cập nhật Empty state
           <Empty description="Your borrowing cart is empty" image={Empty.PRESENTED_IMAGE_SIMPLE}> {/* <-- English */}
-            <Button type="primary" onClick={() => navigate(PATHS.BOOK_CATALOG || "/books")}> {/* <-- English */}
+            <Button type="primary" onClick={() => navigate(PATHS.BOOKS_CATALOG || "/books")}> {/* <-- English */}
                Find Books to Borrow {/* <-- Sử dụng PATHS */}
             </Button>
           </Empty>

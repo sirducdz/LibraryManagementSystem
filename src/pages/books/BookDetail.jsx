@@ -265,7 +265,7 @@ const BookDetail = () => {
             dataSource={book.reviews}
             renderItem={(item) => (
               <li>
-                {/* <Comment
+                <Comment
                   author={item.author}
                   avatar={<Avatar src={item.avatar} alt={item.author} />}
                   content={
@@ -275,7 +275,7 @@ const BookDetail = () => {
                     </div>
                   }
                   datetime={item.datetime}
-                /> */}
+                />
               </li>
             )}
           />
