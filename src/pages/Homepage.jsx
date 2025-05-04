@@ -51,7 +51,7 @@ const HomePage = () => {
   } = useGetCategoriesQuery();
 
   const {
-    data: booksData, // Data trả về đã qua transformResponse (chỉ còn mảng sách)
+    data: booksResponse, // Data trả về đã qua transformResponse (chỉ còn mảng sách)
     isLoading: isLoadingBooks,
     isError: isBooksError,
     error: booksErrorData, // Thông tin lỗi books nếu có
@@ -63,7 +63,10 @@ const HomePage = () => {
 
   const categories = useMemo(() => categoriesData || [], [categoriesData]);
   // booksData giờ đã là mảng sách nhờ transformResponse
-  const displayedBooks = useMemo(() => booksData || [], [booksData]);
+  // const displayedBooks = useMemo(() => booksData || [], [booksData]);
+  const displayedBooks = useMemo(() => booksResponse?.books || [], [booksResponse]);
+  console.log("displayedBooks", booksResponse);
+  
   const loading = isLoadingCategories || isLoadingBooks; // Loading tổng
   // --- Giả lập Fetch dữ liệu Mock ---
   // useEffect(() => {

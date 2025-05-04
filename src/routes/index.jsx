@@ -27,6 +27,7 @@ import HomePage from "../pages/Homepage";
 import BorrowingCart from "../features/cart/pages/BorrowingCart";
 import BookCatalog from "../features/books/pages/BookCatalog";
 import BookDetail from "../features/books/pages/BookDetail";
+import AboutPage from "../features/info/pages/AboutPage";
 function AppRoutes() {
   return (
     // BrowserRouter thường được đặt ở đây hoặc trong main.jsx bao ngoài AppRoutes
@@ -40,6 +41,7 @@ function AppRoutes() {
         {/* Áp dụng Layout */}
         {/* Trang chủ là public và dùng Layout */}
         <Route path={PATHS.HomePage} element={<HomePage />} />
+        <Route path={PATHS.ABOUT} element={<AboutPage />} />
 
         {/* Thêm các trang public khác cần Layout chính ở đây */}
         {/* <Route path="/about" element={<AboutPage />} /> */}

@@ -1,5 +1,5 @@
-// Đổi tên file thành: src/features/books/pages/BookCatalog.jsx
-import React, { useState, useEffect, useMemo } from "react"; // Thêm useMemo
+// src/features/books/pages/BookCatalog.jsx
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Input,
@@ -16,9 +16,8 @@ import {
   Col,
   Button,
   App,
-  Modal, // <-- Giữ lại import Modal
+  Modal,
 } from "antd";
-// Dùng Ant Design Icons cho nhất quán
 import {
   SearchOutlined,
   ShoppingCartOutlined,
@@ -26,153 +25,124 @@ import {
   ReadOutlined,
   AppstoreOutlined,
   ExclamationCircleFilled,
+  SortAscendingOutlined,
+  SortDescendingOutlined, // Icons for Sort Order (Optional)
 } from "@ant-design/icons";
-// import { api } from '../../services/api'; // Tạm thời không dùng api thật
-import { useCart } from "../../../contexts/CartContext"; // <-- Import useCart (Kiểm tra đường dẫn)
-import { UseAuth } from "../../../contexts/AuthContext";
-import { PATHS } from "../../../routes/routePaths"; // <-- Sử dụng PATHS
+import { useCart } from "../../../contexts/CartContext"; // Adjust path if needed
+import { UseAuth } from "../../../contexts/AuthContext"; // Adjust path if needed
+import { PATHS } from "../../../routes/routePaths"; // Adjust path if needed
+
+// --- Import RTK Query Hooks ---
+import { useGetCategoriesQuery, useGetBooksQuery } from "../api/bookApiSlice"; // <<<=== IMPORT HOOKS
 
 const { Meta } = Card;
 const { Option } = Select;
 
 // --- Component BookCatalog ---
 const BookCatalog = () => {
-  // <-- Đổi tên component
-  // --- State ---
-  const [allBooks, setAllBooks] = useState([]); // Lưu trữ toàn bộ sách mock
-  const [categories, setCategories] = useState([]); // Danh mục mock
-  const [loading, setLoading] = useState(true);
+  // State cho params filter/sort/page/order
   const [params, setParams] = useState({
     page: 1,
-    pageSize: 12, // Số sách mỗi trang
-    query: "",
-    categoryId: "all", // Dùng 'all' thay vì undefined cho dễ xử lý filter
-    available: "all", // Dùng 'all', 'available', 'unavailable'
-    sort: "title",
+    pageSize: 12, // Số sách mỗi trang (khớp với API call)
+    query: "", // Tương ứng SearchTerm backend
+    categoryId: "all", // Tương ứng CategoryId backend (null khi là 'all')
+    available: "all", // Tương ứng IsAvailable backend (null khi là 'all')
+    sort: "title", // Tương ứng SortBy backend
+    order: "asc", // Tương ứng SortOrder backend
   });
-  // !!! Bỏ state cartItems cục bộ !!!
-  // const [cartItems, setCartItems] = useState([]);
-  const { isAuthenticated } = UseAuth(); // <-- Lấy trạng thái đăng nhập
-  const navigate = useNavigate(); // <-- Hook để điều hướng
-  // --- Lấy từ CartContext ---
-  const { cartItems, addToCart, isInCart } = useCart(); // Lấy state và hàm từ context
-  // const { message: messageApi, notification, modal } = App.useApp(); // Lấy modal từ đây **
-  const { modal } = App.useApp(); // Lấy modal từ đây
 
-  // --- Giả lập Fetch dữ liệu Mock ---
-  useEffect(() => {
-    // Fetch Categories Mock
-    const mockCategories = [
-      { id: 1, name: "Fiction" }, // <-- English UI Text
-      { id: 2, name: "Science" }, // <-- English UI Text
-      { id: 3, name: "History" }, // <-- English UI Text
-      { id: 4, name: "Psychology" }, // <-- English UI Text
-      { id: 5, name: "Economics" }, // <-- English UI Text
-    ];
-    setCategories(mockCategories);
+  // Hooks và Contexts
+  const navigate = useNavigate();
+  const { isAuthenticated } = UseAuth();
+  const { cartItemCount, addToCart, isInCart } = useCart(); // Lấy cartItemCount để check giỏ đầy nếu cần
+  const { modal: modalApi, message: messageApi } = App.useApp();
 
-    // Fetch Books Mock
-    setLoading(true);
-    setTimeout(() => {
-      const mockBooks = Array(55) // Tạo nhiều sách hơn để test pagination
-        .fill()
-        .map((_, index) => ({
-          id: index + 1,
-          title: `Book ${index + 1} about Programming ${String.fromCharCode(
-            // <-- English UI Text
-            65 + (index % 26)
-          )}`,
-          author: `Author ${(index % 7) + 1}`, // <-- English UI Text
-          category: mockCategories[index % mockCategories.length].name, // Lấy tên tiếng Anh đã đổi
-          categoryId: mockCategories[index % mockCategories.length].id,
-          rating: (Math.random() * 3 + 2).toFixed(1),
-          ratingCount: Math.floor(Math.random() * 250) + 5,
-          available: index % 4 !== 0, // Cứ 4 cuốn thì 1 cuốn hết
-          copies: index % 4 !== 0 ? Math.floor(Math.random() * 5 + 1) : 0, // Số lượng giả
-          coverImage: `https://placehold.co/150x200/EDEDED/AAAAAA/png?text=Book+${
-            // Sử dụng placehold.co
-            index + 1
-          }`, // Ảnh placeholder
-          description: `Short description about book ${index + 1}.`, // <-- English UI Text
-          year: 2024 - (index % 10), // Năm giả
-        }));
-      setAllBooks(mockBooks);
-      setLoading(false);
-    }, 1000);
-  }, []); // Chỉ chạy 1 lần
+  // === Gọi RTK Query Hooks ===
+  const {
+    data: categoriesData,
+    isLoading: isLoadingCategories,
+    isError: isCategoriesError,
+  } = useGetCategoriesQuery();
 
-  // --- Logic Lọc, Sắp xếp, Phân trang phía Client ---
-  const processedBooks = useMemo(() => {
-    let filtered = [...allBooks];
+  const {
+    data: booksResponse, // Data trả về là { books: Book[], totalCount: number } từ transformResponse
+    isLoading: isLoadingBooks, // True khi load lần đầu
+    isFetching, // True khi đang fetch (cả lần đầu và fetch lại)
+    isError: isBooksError, // Có lỗi khi fetch books không
+    error: booksErrorData, // Thông tin lỗi chi tiết
+  } = useGetBooksQuery(params); // <<<=== Truyền toàn bộ object params vào hook
+  // ==========================
 
-    // 1. Lọc (Filter)
-    if (params.query) {
-      const lowerQuery = params.query.toLowerCase();
-      filtered = filtered.filter(
-        (book) =>
-          book.title.toLowerCase().includes(lowerQuery) ||
-          book.author.toLowerCase().includes(lowerQuery)
-      );
-    }
-    if (params.categoryId && params.categoryId !== "all") {
-      filtered = filtered.filter(
-        (book) => book.categoryId === parseInt(params.categoryId, 10)
-      );
-    }
-    if (params.available && params.available !== "all") {
-      const isAvailable = params.available === "available";
-      filtered = filtered.filter((book) => book.available === isAvailable);
-    }
+  // --- Xử lý data từ hooks ---
+  const categories = useMemo(() => categoriesData || [], [categoriesData]);
+  const displayedBooks = useMemo(
+    () => booksResponse?.books || [],
+    [booksResponse]
+  );
+  const totalBookCount = useMemo(
+    () => booksResponse?.totalCount || 0,
+    [booksResponse]
+  );
 
-    // 2. Sắp xếp (Sort)
-    const sortField = params.sort;
-    filtered.sort((a, b) => {
-      if (sortField === "title" || sortField === "author") {
-        return a[sortField].localeCompare(b[sortField]);
-      }
-      if (sortField === "rating") {
-        // Sắp xếp rating giảm dần (cao nhất trước)
-        return parseFloat(b.rating || 0) - parseFloat(a.rating || 0);
-      }
-      if (sortField === "year") {
-        // Sắp xếp năm giảm dần (mới nhất trước)
-        return (b.year || 0) - (a.year || 0);
-      }
-      if (sortField === "createdAt_desc") {
-        // Giả lập sort theo ID giảm dần (coi như mới nhất)
-        return b.id - a.id;
-      }
-      // Thêm các trường hợp sort khác nếu cần
-      return 0;
-    });
-
-    return filtered;
-  }, [
-    allBooks,
-    params.query,
-    params.categoryId,
-    params.available,
-    params.sort,
-  ]); // Chạy lại khi dữ liệu hoặc bộ lọc/sắp xếp thay đổi
-
-  // 3. Phân trang (Paginate) - Lấy slice cho trang hiện tại
-  const paginatedBooks = useMemo(() => {
-    const startIndex = (params.page - 1) * params.pageSize;
-    const endIndex = startIndex + params.pageSize;
-    return processedBooks.slice(startIndex, endIndex);
-  }, [processedBooks, params.page, params.pageSize]); // Chạy lại khi sách đã xử lý hoặc trang/kích thước trang thay đổi
+  // Xác định trạng thái loading (cho lần tải đầu)
+  const initialLoading = isLoadingCategories || isLoadingBooks;
 
   // --- Handlers ---
-  const handleParamChange = (key, value) => {
+  // const handleParamChange = (key, value) => {
+  //     const shouldResetPage = key !== "page";
+  //     const shouldResetOrder = key === 'sort';
+  //     setParams((prevParams) => ({
+  //         ...prevParams,
+  //         [key]: value,
+  //         ...(shouldResetPage && { page: 1 }),
+  //         ...(shouldResetOrder && { order: 'asc' }),
+  //     }));
+  //     // Không cần gọi API lại ở đây, RTK Query hook sẽ tự làm
+  // };
+  const handleParamChange = useCallback((key, value) => {
     const shouldResetPage = key !== "page";
-    setParams((prevParams) => ({
-      ...prevParams,
-      [key]: value,
-      ...(shouldResetPage && { page: 1 }),
-    }));
-  };
+    const shouldResetOrder = key === "sort";
+    setParams((prevParams) => {
+      // Chỉ cập nhật nếu giá trị mới thực sự khác giá trị cũ (tối ưu nhỏ)
+      if (prevParams[key] === value && key !== "page") return prevParams;
 
-  // Các handler cụ thể giữ nguyên, chỉ gọi handleParamChange
+      return {
+        ...prevParams,
+        [key]: value,
+        ...(shouldResetPage && { page: 1 }),
+        ...(shouldResetOrder && { order: "asc" }),
+      };
+    });
+  }, []); // useCallback vì handleParamChange không phụ thuộc vào gì ngoài setParams (stable)
+
+
+  const [inputValue, setInputValue] = useState('');
+  // *** useEffect ĐỂ IMPLEMENT DEBOUNCE CHO SEARCH ***
+  useEffect(() => {
+    // console.log(`Input value changed: "${inputValue}"`);
+    // Đặt một timer. Sau 1000ms (1 giây), nó sẽ cập nhật params.query
+    const timerId = setTimeout(() => {
+      // Chỉ gọi cập nhật nếu giá trị input khác với query hiện tại trong params
+      // để tránh gọi lại khi không cần thiết (ví dụ: khi component re-render)
+      if (inputValue !== params.query) {
+        console.log(
+          `Debounce Timer Fired! Updating query param to: "${inputValue}"`
+        );
+        handleParamChange("query", inputValue); // Cập nhật query param -> trigger RTK fetch
+      }
+    }, 600); // Độ trễ 1 giây
+
+    // Cleanup function: Rất quan trọng!
+    // Nó sẽ chạy mỗi khi inputValue thay đổi *trước khi* effect mới chạy,
+    // hoặc khi component unmount.
+    return () => {
+      // console.log(`Clearing timeout for: "${inputValue}"`);
+      clearTimeout(timerId); // Hủy bỏ timer cũ
+    };
+  }, [inputValue, params.query, handleParamChange]); // Chạy lại effect khi inputValue thay đổi
+  // Thêm params.query và handleParamChange vào dependency để đảm bảo logic đúng và ESLint không báo lỗi
+
+  // Các handler cụ thể
   const handleSearch = (value) => {
     handleParamChange("query", value);
   };
@@ -185,200 +155,227 @@ const BookCatalog = () => {
   const handleSortChange = (value) => {
     handleParamChange("sort", value);
   };
-  const handlePageChange = (page) => {
+  const handleOrderChange = (value) => {
+    handleParamChange("order", value);
+  };
+  const handlePageChange = (page, pageSize) => {
     handleParamChange("page", page);
   };
 
-  // --- Hàm hiển thị modal yêu cầu đăng nhập (Tái sử dụng) ---
+  // Handler cho modal login (giữ nguyên)
   const showLoginRequiredModal = (
     actionDescription = "perform this action"
   ) => {
-    console.log("User not logged in, showing confirmation modal.");
-    modal.confirm({
+    modalApi.confirm({
       title: "Login Required",
       icon: <ExclamationCircleFilled />,
-      content: `You need to be logged in to ${actionDescription}. Do you want to go to the login page?`, // Mô tả hành động cụ thể hơn
+      content: `You need to be logged in to ${actionDescription}. Do you want to go to the login page?`,
       okText: "Login",
       cancelText: "Cancel",
-      onOk() {
-        console.log("OK confirmed, navigating to login.");
-        navigate(PATHS.LOGIN);
-      },
-      onCancel() {
-        console.log("Cancel confirmed, staying on page.");
-      },
+      onOk: () => navigate(PATHS.LOGIN),
     });
   };
 
-  // Xử lý nút Giỏ hàng chính
+  // Handler cho nút Cart chính (giữ nguyên)
   const handleCartButtonClick = () => {
     if (isAuthenticated) {
-      console.log("User logged in, navigating to cart.");
-      navigate(PATHS.BORROWING_CART); // <-- Sử dụng PATHS
+      navigate(PATHS.BORROWING_CART);
     } else {
-      showLoginRequiredModal("view your borrowing cart"); // Gọi hàm tái sử dụng
+      showLoginRequiredModal("view your borrowing cart");
     }
   };
 
-  // Sử dụng addToCart từ context (chỉ khi đã đăng nhập)
-  const handleAddToCart = (book) => {
-    addToCart(book); // Gọi hàm từ context
-  };
-
-  // Xử lý nút "Borrow" trên từng thẻ sách
+  // Handler cho nút Borrow trên Card (giữ nguyên)
   const handleBorrowButtonClick = (book) => {
+    if (!book) return; // Check an toàn
     if (isAuthenticated) {
-      handleAddToCart(book); // Nếu đã đăng nhập, thêm vào giỏ
+      // Gọi addToCart từ context (đã có xử lý message, giới hạn bên trong)
+      addToCart(book);
     } else {
-      showLoginRequiredModal(`add "${book.title}" to the cart`); // Nếu chưa đăng nhập, hiển thị modal
+      showLoginRequiredModal(`add "${book.title}" to the cart`);
     }
   };
 
   // --- Render ---
   return (
-    <div>
+    <div className="p-4 md:p-6 lg:p-8">
+      {" "}
+      {/* Thêm padding chung */}
       {/* Phần Header và Bộ lọc */}
       <div className="bg-white p-5 rounded-lg shadow-sm mb-6">
         {/* Header */}
         <div className="flex flex-wrap justify-between items-center mb-4 gap-4">
           <h1 className="text-2xl font-bold text-gray-800 flex items-center whitespace-nowrap">
             <AppstoreOutlined className="mr-2 text-primary" />
-            Book Catalog {/* <-- English UI Text */}
+            Book Catalog
           </h1>
-          <Badge count={cartItems?.length || 0} showZero>
+          <Badge count={cartItemCount} showZero>
+            {" "}
+            {/* Dùng cartItemCount từ context */}
             <Button
               type="primary"
               icon={<ShoppingCartOutlined />}
               size="large"
               className="flex items-center"
-              onClick={handleCartButtonClick} // <-- Gắn hàm xử lý onClick
+              onClick={handleCartButtonClick}
             >
-              Borrowing Cart {/* <-- English UI Text */}
+              Borrowing Cart
             </Button>
           </Badge>
         </div>
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-          <div className="col-span-1 md:col-span-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          {" "}
+          {/* Responsive grid */}
+          <div className="sm:col-span-2">
+            {" "}
+            {/* Search chiếm 2 cột trên sm+ */}
             <Input
-              placeholder="Search books, authors..." // <-- English UI Text
+              placeholder="Search books, authors..."
               prefix={<SearchOutlined className="text-gray-400" />}
               allowClear
-              onChange={(e) => handleSearch(e.target.value)} // Tìm khi gõ (có thể thêm debounce)
-              // onPressEnter={(e) => handleSearch(e.target.value)} // Hoặc tìm khi Enter
+              // Cân nhắc dùng debounce hoặc search khi nhấn Enter/Button
+              // onChange={(e) => handleSearch(e.target.value)}
               size="large"
+              // value={params.query} // Controlled component
+              onChange={(e) => setInputValue(e.target.value)}
+              // Giá trị của Input được điều khiển bởi inputValue
+              value={inputValue}
+              
             />
           </div>
           <div>
             <Select
-              placeholder="Category" // <-- English UI Text
+              placeholder="Category"
               onChange={handleCategoryChange}
               allowClear
               className="w-full"
               size="large"
-              value={params.categoryId} // Controlled
-              loading={!categories.length && loading} // Loading nếu chưa có categories
+              value={params.categoryId}
+              loading={isLoadingCategories} // Loading icon khi đang fetch categories
             >
-              <Option value="all">All Categories</Option>{" "}
-              {/* <-- English UI Text */}
+              <Option value="all">All Categories</Option>
               {categories.map((category) => (
                 <Option key={category.id} value={category.id.toString()}>
-                  {category.name} {/* Hiển thị tên tiếng Anh đã đổi */}
-                </Option> // Chuyển value sang string nếu cần
+                  {category.name}
+                </Option>
               ))}
             </Select>
           </div>
           <div>
             <Select
-              placeholder="Status" // <-- English UI Text
+              placeholder="Status"
               onChange={handleAvailabilityChange}
               className="w-full"
               size="large"
-              value={params.available} // Controlled
+              value={params.available}
             >
-              <Option value="all">All</Option> {/* <-- English UI Text */}
-              <Option value="available">Available</Option>{" "}
-              {/* <-- English UI Text */}
-              <Option value="unavailable">Borrowed</Option>{" "}
-              {/* <-- English UI Text */}
+              <Option value="all">All</Option>
+              <Option value="available">Available</Option>
+              <Option value="unavailable">Borrowed</Option>
             </Select>
           </div>
         </div>
-        {/* Sort & Count */}
+        {/* Sort & Count & Order */}
         <div className="flex flex-wrap justify-between items-center gap-4">
-          <div>
-            <span className="mr-2 text-sm text-gray-600">Sort by:</span>{" "}
-            {/* <-- English UI Text */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-gray-600">Sort by:</span>
             <Select
               onChange={handleSortChange}
-              className="w-40"
+              className="w-36 sm:w-40"
               value={params.sort}
+              size="middle"
             >
-              <Option value="title">Title</Option> {/* <-- English UI Text */}
-              <Option value="author">Author</Option> {/* <-- English UI Text */}
-              <Option value="rating">Rating (High-Low)</Option>{" "}
-              {/* <-- English UI Text */}
-              <Option value="year">Year (New-Old)</Option>{" "}
-              {/* <-- English UI Text */}
-              <Option value="createdAt_desc">Newest (ID)</Option>{" "}
-              {/* <-- English UI Text */}
+              <Option value="title">Title</Option>
+              <Option value="author">Author</Option>
+              <Option value="rating">Rating</Option>
+              <Option value="year">Year</Option>
+              <Option value="ratingCount">Rating Count</Option>
+              {/* Giả sử backend hỗ trợ sort theo ID giảm dần là 'id' + order 'desc' */}
+              <Option value="id">Newest</Option>
+            </Select>
+            <span className="text-sm text-gray-600 ml-1 sm:ml-2">Order:</span>
+            <Select
+              onChange={handleOrderChange}
+              className="w-28 sm:w-32"
+              value={params.order}
+              size="middle"
+            >
+              <Option value="asc">Ascending</Option>
+              <Option value="desc">Descending</Option>
             </Select>
           </div>
-          <div className="text-sm text-gray-500">
-            {/* Hiển thị số lượng sách đã lọc */}
-            {!loading && `Found ${processedBooks.length} books`}{" "}
-            {/* <-- English UI Text */}
+          <div className="text-sm text-gray-500 flex items-center gap-2">
+            {/* Hiển thị Spin khi đang fetch lại dữ liệu */}
+            {isFetching && <Spin size="small" />}
+            {/* Chỉ hiển thị số lượng khi không loading lần đầu */}
+            {!initialLoading && `Found ${totalBookCount} books`}
           </div>
         </div>
       </div>
-
       {/* Danh sách sách */}
-      {loading ? (
-        // Skeleton loading
-        <Row gutter={[16, 16]}>
+      {initialLoading ? (
+        // Skeleton loading cho lần tải đầu
+        <Row gutter={[16, 24]}>
           {Array.from({ length: params.pageSize }).map((_, index) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={index}>
-              {/* SỬA LỖI BADGE: Đặt Skeleton bên trong Card để duy trì cấu trúc */}
-              <Card className="h-full book-card">
-                <Skeleton active />
+            <Col xs={12} sm={12} md={8} lg={6} key={index}>
+              <Card>
+                {" "}
+                <Skeleton active avatar paragraph={{ rows: 2 }} />{" "}
               </Card>
             </Col>
           ))}
         </Row>
-      ) : processedBooks.length === 0 ? (
-        // Empty state
-        <Empty description="No matching books found." /> // <-- English UI Text
+      ) : isBooksError ? (
+        // Hiển thị lỗi
+        <div className="text-center py-12">
+          <Empty description="Failed to load books. Please try again." />
+          {/* Optional: Show error details for debugging */}
+          {/* <pre className="text-xs text-red-500 mt-2">{JSON.stringify(booksErrorData, null, 2)}</pre> */}
+        </div>
+      ) : totalBookCount === 0 ? (
+        // Hiển thị khi không có sách nào khớp
+        <Empty description="No books found matching your criteria." />
       ) : (
-        // Hiển thị sách đã phân trang
+        // Hiển thị danh sách sách và phân trang
         <>
-          <Row gutter={[16, 16]} className="mb-6">
-            {paginatedBooks.map(
-              (
-                book // <-- Dùng paginatedBooks
-              ) => (
+          <Row gutter={[16, 24]} className="mb-6">
+            {/* Lặp qua displayedBooks lấy từ hook */}
+            {displayedBooks.map((book) => {
+              const isBookInCart = isInCart(book?.id);
+              const isCartFull = cartItemCount >= 5; // Check giỏ đầy
+              const isBorrowDisabled =
+                !book?.available || isBookInCart || isCartFull;
+
+              let borrowButtonTitle = "Add to borrowing cart";
+              if (!book?.available)
+                borrowButtonTitle = "Book is currently borrowed";
+              else if (isBookInCart)
+                borrowButtonTitle = "Book is already in the cart";
+              else if (isCartFull)
+                borrowButtonTitle = "Borrowing cart is full (max 5)";
+
+              return (
                 <Col
-                  xs={24}
+                  xs={12}
                   sm={12}
                   md={8}
                   lg={6}
                   key={book.id}
                   className="mb-4"
                 >
-                  {/* SỬA LỖI BADGE: Badge.Ribbon bao bọc Card */}
                   <Badge.Ribbon
-                    text={book.available ? "Available" : "Borrowed"} // <-- English UI Text
+                    text={book.available ? "Available" : "Borrowed"}
                     color={book.available ? "green" : "red"}
-                    // placement="start" // Hoặc 'end', 'topRight', etc. tùy ý
                   >
                     <Card
                       hoverable
                       className="h-full flex flex-col book-card overflow-hidden rounded-lg shadow hover:shadow-md transition-shadow duration-300"
-                      // Phần cover tách biệt với actions và meta nên ribbon sẽ không đè meta
                       cover={
                         <div className="h-56 overflow-hidden p-4 bg-gray-100">
-                          <Link to={`${PATHS.BOOK_DETAIL}/${book.id}`}>
-                            {" "}
-                            {/* <-- Sử dụng PATHS */}
+                          <Link
+                            to={PATHS.BOOK_DETAIL.replace(":bookId", book.id)}
+                          >
                             <img
                               alt={book.title}
                               src={book.coverImage || "/placeholder-book.png"}
@@ -399,82 +396,87 @@ const BookCatalog = () => {
                           type="link"
                           key="borrow"
                           icon={<ShoppingCartOutlined />}
-                          // Disable dựa vào book.available và isInCart từ context
-                          disabled={!book.available || isInCart(book.id)}
-                          // SỬA LỖI LOGIN CHECK: Gọi hàm xử lý mới
-                          onClick={() => handleBorrowButtonClick(book)}
-                          title={
-                            !book.available
-                              ? "Book is currently borrowed" // <-- English UI Text
-                              : isInCart(book.id)
-                              ? "Book is already in the cart" // <-- English UI Text
-                              : "Add to borrowing cart" // <-- English UI Text
-                          }
+                          disabled={isBorrowDisabled}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBorrowButtonClick(book);
+                          }}
+                          title={borrowButtonTitle}
                         >
-                          {isInCart(book.id) ? "Added" : "Borrow"}{" "}
-                          {/* <-- English UI Text */}
+                          {isBookInCart ? "Added" : "Borrow"}
                         </Button>,
                       ]}
                     >
-                      {/* Meta bây giờ nằm bên trong Card, không bị Badge đè */}
                       <Meta
-                        // Thêm padding top nhỏ để tránh bị gần ribbon quá nếu cần
-                        // style={{ paddingTop: '8px' }}
                         title={
                           <Link
-                            to={`${PATHS.BOOK_DETAIL}/${book.id}`}
-                            className="hover:text-primary transition-colors duration-200"
+                            to={PATHS.BOOK_DETAIL.replace(":bookId", book.id)}
+                            className="hover:text-primary transition-colors duration-200 text-base font-semibold"
                           >
-                            {book.title}
+                            {book.title || "No Title"}
                           </Link>
                         }
                         description={
                           <>
-                            <p className="text-gray-600 mb-1">{book.author}</p>
-                            <div className="flex items-center mb-1">
+                            <p className="text-gray-600 mb-1 text-sm truncate">
+                              {book.author || "Unknown Author"}
+                            </p>{" "}
+                            {/* Thêm truncate */}
+                            <div className="flex items-center flex-wrap mb-1 text-xs">
                               <Rate
                                 allowHalf
                                 disabled
-                                defaultValue={parseFloat(book.rating)}
-                                style={{ fontSize: "1rem", marginRight: "8px" }}
-                              />
-                              <span className="text-yellow-500 font-semibold">
-                                {book.rating}
+                                value={parseFloat(book.rating)}
+                                style={{
+                                  fontSize: "0.8rem",
+                                  marginRight: "4px",
+                                }}
+                              />{" "}
+                              {/* Dùng value */}
+                              <span className="text-yellow-500 font-semibold mr-1">
+                                {book.rating?.toFixed(1)}
                               </span>
-                              <span className="text-gray-500 ml-2">
-                                {" "}
-                                ({book.ratingCount})
-                              </span>
+                              {/* Thêm kiểm tra ratingCount > 0 */}
+                              {book.ratingCount > 0 && (
+                                <span className="text-gray-500 ml-1">
+                                  ({book.ratingCount} reviews)
+                                </span>
+                              )}
                             </div>
-                            <Tag color="blue">{book.category}</Tag>
-                            {/* Optionally show number of copies if available */}
-                            {book.available && (
-                              <Tag color="geekblue" className="ml-1">
-                                Copies: {book.copies}
+                            {/* Thêm kiểm tra category */}
+                            {book.category && (
+                              <Tag color="blue" className="mt-1">
+                                {book.category}
                               </Tag>
                             )}
+                            {/* Hiển thị copies */}
+                            {book.available &&
+                              typeof book.copies === "number" && (
+                                <Tag color="geekblue" className="mt-1 ml-1">
+                                  Copies: {book.copies}
+                                </Tag>
+                              )}
                           </>
                         }
                       />
                     </Card>
                   </Badge.Ribbon>
                 </Col>
-              )
-            )}
+              );
+            })}
           </Row>
 
           {/* Phân trang */}
-          {/* Total lấy từ tổng số sách đã lọc */}
-          {processedBooks.length > params.pageSize && (
+          {totalBookCount > params.pageSize && ( // Chỉ hiển thị nếu tổng số sách lớn hơn số sách trên 1 trang
             <div className="flex justify-center my-6">
               <Pagination
-                current={params.page} // Lấy từ state params
-                pageSize={params.pageSize} // Lấy từ state params
-                total={processedBooks.length} // <-- Tổng là số sách ĐÃ LỌC
-                onChange={handlePageChange} // Gọi hàm xử lý đổi trang
-                showSizeChanger={false}
-                showTotal={
-                  (total, range) => `${range[0]}-${range[1]} of ${total} books` // <-- English UI Text format
+                current={params.page}
+                pageSize={params.pageSize}
+                total={totalBookCount} // Lấy tổng số từ hook response
+                onChange={handlePageChange}
+                showSizeChanger={false} // Ẩn nếu không muốn đổi PageSize
+                showTotal={(total, range) =>
+                  `${range[0]}-${range[1]} of ${total} books`
                 }
               />
             </div>
@@ -485,4 +487,4 @@ const BookCatalog = () => {
   );
 };
 
-export default BookCatalog; // <-- Đổi tên export
+export default BookCatalog;

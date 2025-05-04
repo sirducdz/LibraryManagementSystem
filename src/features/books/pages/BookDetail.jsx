@@ -311,7 +311,7 @@ const BookDetail = () => {
                 Back
             </Button>
 
-            <Card bordered={false} className="shadow-lg">
+            <Card variant={false} className="shadow-lg">
                 <Row gutter={[24, 32]}> {/* Increased gutter */}
                     {/* Book Cover & Add to Cart Button */}
                     <Col xs={24} sm={10} md={8} lg={7} xl={6}>
@@ -388,7 +388,7 @@ const BookDetail = () => {
 
                     {/* Review Submission Form */}
                     {canUserReview ? ( // Only show form if user is authenticated (simplification)
-                        <Card bordered={false} className="mb-6 bg-gray-50 rounded-lg p-4">
+                        <Card variant={false} className="mb-6 bg-gray-50 rounded-lg p-4">
                             <Title level={4} className="mb-4">Write Your Review</Title>
                             <div className="mb-3 flex items-center gap-2">
                                 <Text><StarOutlined className="mr-1" /> Your Rating:</Text>

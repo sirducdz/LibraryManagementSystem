@@ -8,6 +8,7 @@
 export const PATHS = {
     // --- Public Paths (Không cần đăng nhập) ---
     LOGIN: '/login',                             // Màn hình Đăng nhập [cite: 55]
+    ABOUT: '/about',                             // Màn hình Đăng nhập [cite: 55]
     HomePage: '/homepage',                             // Màn hình Đăng nhập [cite: 55]
     REGISTER: '/register',                         // Màn hình Đăng ký (Thường đi kèm Login)
     FORGOT_PASSWORD: '/forgot-password',           // Màn hình Quên mật khẩu (Thường đi kèm Login)
