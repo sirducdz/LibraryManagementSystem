@@ -7,16 +7,43 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 
 // Hoặc định nghĩa một baseQuery mới/đơn giản hơn nếu không cần phức tạp như auth
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { jwtDecode } from "jwt-decode";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "https://localhost:7144/api", // <<<=== THAY THẾ URL API CỦA BẠN
+  baseUrl: "https://localhost:7144/api", // <<<=== URL API CỦA BẠN
   prepareHeaders: (headers, { getState }) => {
-    // Lấy token từ state nếu các endpoint này cần xác thực
-    const token = getState().auth?.accessToken; // Giả sử state auth lưu token
-    if (token) {
-      headers.set("authorization", `Bearer ${token}`);
-    }
-    return headers;
+      // *** THAY ĐỔI QUAN TRỌNG: Đọc token trực tiếp từ Storage ***
+      // Ưu tiên đọc từ localStorage trước (nếu người dùng chọn "Remember me")
+      let token = localStorage.getItem("accessToken");
+      let source = "localStorage";
+      // Nếu không có trong localStorage, thử đọc từ sessionStorage
+      if (!token) {
+          token = sessionStorage.getItem("accessToken");
+          source = "sessionStorage";
+      }
+
+      console.log(`[prepareHeaders] Attempting to read token from ${source}. Found: ${!!token}`);
+
+      if (token) {
+          // (Tùy chọn nhưng nên có): Kiểm tra hạn token phía client trước khi gửi
+           try {
+                const decoded = jwtDecode(token);
+                const currentTime = Date.now() / 1000;
+                if (decoded.exp && decoded.exp > currentTime) {
+                     headers.set("authorization", `Bearer ${token}`);
+                     console.log(`[prepareHeaders] Token from ${source} is valid. Authorization header set.`);
+                } else {
+                     console.warn(`[prepareHeaders] Token from ${source} is expired. Header NOT set.`);
+                     // Không gắn header nếu token hết hạn
+                }
+           } catch(e) {
+                console.error(`[prepareHeaders] Invalid token found in ${source}. Header NOT set.`, e);
+                // Không gắn header nếu token không hợp lệ
+           }
+      } else {
+           console.log("[prepareHeaders] No token found in either storage. Header NOT set.");
+      }
+      return headers;
   },
 });
 
@@ -36,44 +63,67 @@ export const bookApiSlice = createApi({
     // --- Endpoint để lấy danh sách Books ---
     // Có thể nhận tham số để lọc, phân trang
     getBooks: builder.query({
-      // args là object chứa các tham số: { categoryId, page, pageSize, etc. }
       query: ({ categoryId = null, page = 1, pageSize = 8 } = {}) => {
-        // Tạo URLSearchParams để quản lý query params dễ dàng
-        const params = new URLSearchParams();
-        params.append("page", page.toString());
-        params.append("pageSize", pageSize.toString());
-
-        // Thêm categoryId nếu có giá trị (khác null/undefined)
-        if (categoryId) {
-          params.append("categoryId", categoryId);
-        }
-
-        // Có thể thêm các tham số khác: isFeatured, sortBy, searchQuery,...
-        // params.append('isFeatured', 'true'); // Ví dụ nếu API hỗ trợ lấy sách nổi bật
-
-        // Trả về URL cuối cùng
-        return `/Books?${params.toString()}`; // <<<=== Sửa lại path API lấy books của bạn
+          const params = new URLSearchParams({
+              page: page.toString(),
+              pageSize: pageSize.toString(),
+          });
+          if (categoryId) {
+              params.append('categoryId', categoryId);
+          }
+          // params.append('isFeatured', 'true'); // Thêm nếu cần
+          return `/Books?${params.toString()}`; // <<<=== Path API lấy books
       },
-      // Cung cấp tags để quản lý cache hiệu quả
+      // *** Thêm transformResponse để xử lý cấu trúc JSON mới ***
+      transformResponse: (response) => {
+          console.log("API Response (getBooks):", response); // Log để kiểm tra cấu trúc gốc
+          // Kiểm tra xem response có đúng dạng và có thuộc tính 'items' là mảng không
+          if (response && Array.isArray(response.items)) {
+               // Trích xuất và chuyển đổi dữ liệu sách nếu cần
+               const transformedBooks = response.items.map(book => ({
+                   ...book, // Giữ lại các trường gốc
+                   // Đổi tên coverImageUrl thành coverImage
+                   coverImage: book.coverImageUrl,
+                   // Đổi tên publicationYear thành year (nếu component dùng year)
+                   year: book.publicationYear,
+                   // Xóa các trường gốc đã đổi tên nếu muốn (tùy chọn)
+                   // coverImageUrl: undefined,
+                   // publicationYear: undefined,
+               }));
+               console.log("Transformed Books:", transformedBooks);
+               return transformedBooks; // Chỉ trả về mảng sách đã xử lý
+          }
+           // Nếu cấu trúc không đúng, trả về mảng rỗng để tránh lỗi component
+          console.warn("Received unexpected structure from /Books API:", response);
+          return [];
+           // ---- HOẶC ----
+           // Nếu bạn muốn component nhận cả thông tin phân trang:
+           /*
+           const transformedBooks = (response?.items || []).map(book => ({
+               ...book,
+               coverImage: book.coverImageUrl,
+               year: book.publicationYear,
+           }));
+           return {
+               books: transformedBooks,
+               page: response.page,
+               pageSize: response.pageSize,
+               totalItems: response.totalItems,
+               totalPages: response.totalPages,
+           };
+           */
+      },
+      // Cập nhật providesTags nếu cần (vẫn hoạt động với mảng trả về)
       providesTags: (result, error, arg) =>
-        result // Giả sử result là một mảng sách [{id: 1,...}, {id: 2,...}]
-          ? [
-              ...result.map(({ id }) => ({ type: "Book", id })), // Gắn tag cho từng cuốn sách
-              { type: "Book", id: "LIST" }, // Gắn tag chung cho danh sách
-            ]
-          : [{ type: "Book", id: "LIST" }], // Tag mặc định nếu lỗi hoặc không có kết quả
-      // Ví dụ: Nếu API trả về dạng { data: [...], totalCount: ... }
-      // transformResponse: (response) => ({ books: response.data, totalCount: response.totalCount }),
-    }),
-
-    // Có thể thêm endpoint lấy chi tiết sách ở đây nếu chưa có
-    // getBookById: builder.query({ ... }),
+          result
+              ? [...result.map(({ id }) => ({ type: 'Book', id })), { type: 'Book', id: 'LIST' }]
+              : [{ type: 'Book', id: 'LIST' }],
   }),
+  // ... các endpoints khác ...
+}),
 });
 
-// Export các hooks để sử dụng trong component
 export const {
-  useGetCategoriesQuery,
-  useGetBooksQuery,
-  // useGetBookByIdQuery,
+useGetCategoriesQuery,
+useGetBooksQuery,
 } = bookApiSlice;

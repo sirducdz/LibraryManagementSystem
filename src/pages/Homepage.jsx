@@ -28,79 +28,106 @@ import { PATHS } from "../routes/routePaths";
 
 const { Title, Paragraph, Text } = Typography;
 const { Meta } = Card;
-
+import {
+  useGetCategoriesQuery,
+  useGetBooksQuery,
+} from "../features/books/api/bookApiSlice";
 // --- Component HomePage ---
 const HomePage = () => {
-  const [featuredBooks, setFeaturedBooks] = useState([]); // Sách nổi bật hiển thị
-  const [allMockBooks, setAllMockBooks] = useState([]); // Lưu trữ toàn bộ sách mock để lọc
-  const [categories, setCategories] = useState([]); // Danh mục mock
+  // const [featuredBooks, setFeaturedBooks] = useState([]); // Sách nổi bật hiển thị
+  // const [allMockBooks, setAllMockBooks] = useState([]); // Lưu trữ toàn bộ sách mock để lọc
+  // const [categories, setCategories] = useState([]); // Danh mục mock
   const [selectedCategoryId, setSelectedCategoryId] = useState(null); // ID danh mục được chọn
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
   const { isAuthenticated } = UseAuth(); // Lấy trạng thái đăng nhập
   const { cartItems, cartItemCount, addToCart, isInCart } = useCart();
   const { message: messageApi, modal: modalApi } = App.useApp(); // Lấy message và modal
+  const {
+    data: categoriesData,
+    isLoading: isLoadingCategories,
+    isError: isCategoriesError,
+  } = useGetCategoriesQuery();
 
+  const {
+    data: booksData, // Data trả về đã qua transformResponse (chỉ còn mảng sách)
+    isLoading: isLoadingBooks,
+    isError: isBooksError,
+    error: booksErrorData, // Thông tin lỗi books nếu có
+  } = useGetBooksQuery({
+    // Gọi hook lấy sách
+    categoryId: selectedCategoryId, // Truyền ID category đang chọn
+    pageSize: 8, // Luôn lấy 8 cuốn cho trang chủ
+  });
+
+  const categories = useMemo(() => categoriesData || [], [categoriesData]);
+  // booksData giờ đã là mảng sách nhờ transformResponse
+  const displayedBooks = useMemo(() => booksData || [], [booksData]);
+  const loading = isLoadingCategories || isLoadingBooks; // Loading tổng
   // --- Giả lập Fetch dữ liệu Mock ---
-  useEffect(() => {
-    setLoading(true);
-    // Fetch Categories Mock
-    const mockCategories = [
-      { id: 1, name: "Fiction" },
-      { id: 2, name: "Science" },
-      { id: 3, name: "History" },
-      { id: 4, name: "Psychology" },
-      { id: 5, name: "Economics" },
-    ];
-    setCategories(mockCategories);
+  // useEffect(() => {
+  //   setLoading(true);
+  //   // Fetch Categories Mock
+  //   const mockCategories = [
+  //     { id: 1, name: "Fiction" },
+  //     { id: 2, name: "Science" },
+  //     { id: 3, name: "History" },
+  //     { id: 4, name: "Psychology" },
+  //     { id: 5, name: "Economics" },
+  //   ];
+  //   setCategories(mockCategories);
 
-    // Fetch Books Mock (Lấy toàn bộ rồi xử lý sau)
-    setTimeout(() => {
-      const mockBooks = Array(55)
-        .fill()
-        .map((_, index) => ({
-          id: index + 1,
-          title: `Book ${index + 1} about Design ${String.fromCharCode(
-            65 + (index % 26)
-          )}`,
-          author: `Author ${(index % 7) + 1}`,
-          category: mockCategories[index % mockCategories.length].name,
-          categoryId: mockCategories[index % mockCategories.length].id,
-          rating: (Math.random() * 3 + 2).toFixed(1),
-          ratingCount: Math.floor(Math.random() * 250) + 5,
-          available: index % 4 !== 0,
-          copies: index % 4 !== 0 ? Math.floor(Math.random() * 5 + 1) : 0,
-          coverImage: `https://placehold.co/150x200/EDEDED/AAAAAA/png?text=Book+${
-            index + 1
-          }`,
-          description: `Short description about book ${index + 1}.`,
-          year: 2024 - (index % 10),
-        }));
-      setAllMockBooks(mockBooks);
-      setFeaturedBooks(mockBooks.slice(0, 8));
-      setLoading(false);
-    }, 1000);
-  }, []);
+  //   // Fetch Books Mock (Lấy toàn bộ rồi xử lý sau)
+  //   setTimeout(() => {
+  //     const mockBooks = Array(55)
+  //       .fill()
+  //       .map((_, index) => ({
+  //         id: index + 1,
+  //         title: `Book ${index + 1} about Design ${String.fromCharCode(
+  //           65 + (index % 26)
+  //         )}`,
+  //         author: `Author ${(index % 7) + 1}`,
+  //         category: mockCategories[index % mockCategories.length].name,
+  //         categoryId: mockCategories[index % mockCategories.length].id,
+  //         rating: (Math.random() * 3 + 2).toFixed(1),
+  //         ratingCount: Math.floor(Math.random() * 250) + 5,
+  //         available: index % 4 !== 0,
+  //         copies: index % 4 !== 0 ? Math.floor(Math.random() * 5 + 1) : 0,
+  //         coverImage: `https://placehold.co/150x200/EDEDED/AAAAAA/png?text=Book+${
+  //           index + 1
+  //         }`,
+  //         description: `Short description about book ${index + 1}.`,
+  //         year: 2024 - (index % 10),
+  //       }));
+  //     setAllMockBooks(mockBooks);
+  //     setFeaturedBooks(mockBooks.slice(0, 8));
+  //     setLoading(false);
+  //   }, 1000);
+  // }, []);
 
   // --- Lọc sách nổi bật theo category ---
-  const displayedBooks = useMemo(() => {
-    if (!selectedCategoryId) {
-      return allMockBooks.slice(0, 8);
-    }
-    const filtered = allMockBooks.filter(
-      (book) => book.categoryId === selectedCategoryId
-    );
-    return filtered.slice(0, 8);
-  }, [selectedCategoryId, allMockBooks]);
+  // const displayedBooks = useMemo(() => {
+  //   if (!selectedCategoryId) {
+  //     return allMockBooks.slice(0, 8);
+  //   }
+  //   const filtered = allMockBooks.filter(
+  //     (book) => book.categoryId === selectedCategoryId
+  //   );
+  //   return filtered.slice(0, 8);
+  // }, [selectedCategoryId, allMockBooks]);
 
   // --- Handlers ---
+  // const handleCategoryClick = (categoryId) => {
+  //   setSelectedCategoryId((prevId) =>
+  //     prevId === categoryId ? null : categoryId
+  //   );
+  // };
   const handleCategoryClick = (categoryId) => {
     setSelectedCategoryId((prevId) =>
       prevId === categoryId ? null : categoryId
     );
   };
-
   // --- Hàm hiển thị modal yêu cầu đăng nhập (Tái sử dụng) ---
   const showLoginRequiredModal = (
     actionDescription = "perform this action"
@@ -203,18 +230,28 @@ const HomePage = () => {
             >
               All Featured
             </Button>
-            {categories.map((category) => (
-              <Button
-                key={category.id}
-                type={
-                  selectedCategoryId === category.id ? "primary" : "default"
-                }
-                icon={<TagOutlined />}
-                onClick={() => handleCategoryClick(category.id)}
-              >
-                {category.name}
-              </Button>
-            ))}
+            {/* Hiển thị categories từ state `categories` */}
+            {isLoadingCategories ? (
+              <Spin size="small" />
+            ) : (
+              categories.map((category) => (
+                <Button
+                  key={category.id}
+                  type={
+                    selectedCategoryId === category.id ? "primary" : "default"
+                  }
+                  icon={<TagOutlined />}
+                  onClick={() => handleCategoryClick(category.id)}
+                >
+                  {category.name}
+                </Button>
+              ))
+            )}
+            {isCategoriesError && (
+              <Text type="danger" className="ml-4">
+                Error loading categories.
+              </Text>
+            )}
           </div>
         </div>
       </section>
@@ -231,12 +268,12 @@ const HomePage = () => {
                   } Books`
                 : "Featured Books"}
             </Title>
-            {/* Nút này có thể không cần check login vì chỉ điều hướng đến catalog */}
             <Button type="dashed" onClick={handleNavigateToCatalog}>
               View All Books <ArrowRightOutlined />
             </Button>
           </div>
 
+          {/* Xử lý loading/error/empty cho books */}
           {loading ? (
             <Row gutter={[16, 24]}>
               {Array.from({ length: 8 }).map((_, index) => (
@@ -247,8 +284,12 @@ const HomePage = () => {
                 </Col>
               ))}
             </Row>
+          ) : isBooksError ? (
+            <div className="text-center py-12">
+              <Empty description="Could not load books. Please try again later." />
+            </div>
           ) : displayedBooks.length === 0 ? (
-            <div className="col-span-full text-center py-12">
+            <div className="text-center py-12">
               <Empty
                 description={`No books found ${
                   selectedCategoryId ? "in this category" : ""
@@ -256,13 +297,14 @@ const HomePage = () => {
               />
             </div>
           ) : (
+            // Render danh sách sách dùng `displayedBooks`
             <Row gutter={[16, 24]}>
               {displayedBooks.map((book) => {
                 const isBookInCart = isInCart(book.id);
-                const isBorrowDisabled = !book.available || isBookInCart;
-
+                // Nhớ kiểm tra book có tồn tại trước khi truy cập thuộc tính
+                const isBorrowDisabled = !book?.available || isBookInCart;
                 let borrowButtonTitle = "Add to borrowing cart";
-                if (!book.available)
+                if (!book?.available)
                   borrowButtonTitle = "Book is currently borrowed";
                 else if (isBookInCart)
                   borrowButtonTitle = "Book is already in the cart";
@@ -278,7 +320,10 @@ const HomePage = () => {
                         className="h-full flex flex-col book-card overflow-hidden rounded-lg shadow hover:shadow-md transition-shadow duration-300"
                         cover={
                           <div className="h-56 overflow-hidden p-4 bg-gray-100">
-                            <Link to={`${PATHS.BOOK_DETAIL}/${book.id}`}>
+                            {/* Sử dụng tên trường đã map: book.coverImage */}
+                            <Link
+                              to={PATHS.BOOK_DETAIL.replace(":bookId", book.id)}
+                            >
                               <img
                                 alt={book.title}
                                 src={book.coverImage || "/placeholder-book.png"}
@@ -289,7 +334,7 @@ const HomePage = () => {
                         }
                         actions={[
                           <Link
-                            to={PATHS.BOOK_DETAIL.replace(':bookId', book.id)}
+                            to={PATHS.BOOK_DETAIL.replace(":bookId", book.id)}
                             key="details"
                             title="View Details"
                           >
@@ -313,7 +358,7 @@ const HomePage = () => {
                         <Meta
                           title={
                             <Link
-                              to={`${PATHS.BOOK_DETAIL}/${book.id}`}
+                              to={PATHS.BOOK_DETAIL.replace(":bookId", book.id)}
                               className="hover:text-primary transition-colors duration-200 text-base font-semibold"
                             >
                               {book.title}
@@ -325,6 +370,7 @@ const HomePage = () => {
                                 {book.author}
                               </p>
                               <div className="flex items-center flex-wrap mb-1 text-xs">
+                                {/* Đảm bảo dùng book.rating, book.ratingCount */}
                                 <Rate
                                   allowHalf
                                   disabled
@@ -335,15 +381,24 @@ const HomePage = () => {
                                   }}
                                 />
                                 <span className="text-yellow-500 font-semibold mr-1">
-                                  {book.rating}
-                                </span>
+                                  {book.rating?.toFixed(1)}
+                                </span>{" "}
+                                {/* Thêm toFixed(1) nếu cần */}
                                 <span className="text-gray-500 ml-1">
                                   ({book.ratingCount} reviews)
                                 </span>
                               </div>
+                              {/* Đảm bảo dùng book.category */}
                               <Tag color="blue" className="mt-1">
                                 {book.category}
                               </Tag>
+                              {book.available &&
+                                typeof book.copies === "number" && (
+                                  <Tag color="geekblue" className="mt-1 ml-1">
+                                    {/* Thêm ml-1 để có khoảng cách */}
+                                    Copies: {book.copies}
+                                  </Tag>
+                                )}
                             </>
                           }
                         />
@@ -356,7 +411,6 @@ const HomePage = () => {
           )}
         </div>
       </section>
-
       {/* 4. How It Works Section */}
       <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
         <div className="container px-4 mx-auto">
