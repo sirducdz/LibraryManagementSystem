@@ -21,6 +21,7 @@ export const PATHS = {
     BOOK_DETAIL: '/books/:bookId',                 // Màn hình Chi tiết Sách (với bookId động) [cite: 57]
     BORROWING_CART: '/borrowing-cart',             // Màn hình Giỏ mượn / Form Yêu cầu [cite: 60]
     MY_REQUESTS: '/my-requests',                   // Màn hình Yêu cầu của tôi [cite: 61]
+    MY_REQUEST_DETAIL: '/my-request/:requestId',                   // Màn hình Yêu cầu của tôi [cite: 61]
     MY_BORROWED_BOOKS: '/my-borrowed-books',       // Màn hình Sách đã mượn [cite: 62]
     PROFILE: '/profile',                           // Màn hình Hồ sơ Người dùng [cite: 74]
     // SETTINGS: '/settings',                      // Ví dụ: Thêm màn hình Cài đặt nếu cần

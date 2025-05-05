@@ -9,7 +9,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { jwtDecode } from "jwt-decode";
 
-const baseQuery = fetchBaseQuery({
+export const baseQuery = fetchBaseQuery({
   baseUrl: "https://localhost:7144/api", // <<<=== URL API CỦA BẠN
   prepareHeaders: (headers, { getState }) => {
     // *** THAY ĐỔI QUAN TRỌNG: Đọc token trực tiếp từ Storage ***
@@ -175,8 +175,126 @@ export const bookApiSlice = createApi({
           : [{ type: "Book", id: "LIST" }],
     }),
 
+    getBookById: builder.query({
+      query: (bookId) => `/Books/${bookId}`, // Path API chi tiết sách
+      // *** Xử lý response từ /Books/{id} ***
+      transformResponse: (response) => {
+        console.log("API Response (getBookById):", response);
+        if (response && typeof response === "object" && response.id) {
+          // Suy ra 'available' và map các trường cần thiết
+          const transformedBook = {
+            ...response,
+            // Các trường component đang dùng:
+            coverImage: response.coverImageUrl,
+            rating: response.averageRating, // Map từ averageRating
+            ratingCount: response.ratingCount, // Giữ nguyên
+            available: response.availableQuantity > 0, // Suy ra từ availableQuantity
+            copies: response.availableQuantity, // copies là số lượng còn lại
+            year: response.publicationYear, // Map từ publicationYear
+            // Giữ lại các trường khác component cần: id, title, author, category, categoryId, isbn, publisher, description, pages, language...
+            // Xóa các trường không dùng hoặc đã đổi tên nếu muốn
+          };
+          //   delete transformedBook.coverImageUrl;
+          // delete transformedBook.averageRating;
+          // delete transformedBook.publicationYear;
+          // delete transformedBook.availableQuantity;
+          // delete transformedBook.totalQuantity;
+          console.log("Transformed Book (Detail):", transformedBook);
+          return transformedBook; // Trả về object sách đã xử lý
+        }
+        console.warn(
+          "Received unexpected structure or book not found from /Books/{id} API:",
+          response
+        );
+        return null; // Trả về null nếu không tìm thấy hoặc lỗi
+      },
+      providesTags: (result, error, id) => [{ type: "Book", id }],
+    }),
+
+    // --- Endpoint MỚI để LẤY REVIEWS cho sách ---
+    getBookReviews: builder.query({
+      // Nhận bookId và các tham số phân trang (nếu cần)
+      query: (
+        { bookId, page = 1, pageSize = 10 } // Mặc định lấy 10 review trang 1
+      ) => `/book-ratings/book/${bookId}?page=${page}&pageSize=${pageSize}`, // <<<=== Path API lấy reviews
+      // *** Xử lý response JSON có cấu trúc { items: [...], totalItems: ... } ***
+      transformResponse: (response) => {
+        console.log("API Response (getBookReviews):", response);
+        if (response && Array.isArray(response.items)) {
+          const transformedReviews = response.items.map((review) => ({
+            // Map các trường từ API review sang tên component đang dùng
+            id: review.id,
+            author: review.userFullName, // userFullName -> author
+            avatar: null, // API không có avatar, trả về null
+            content: review.comment, // comment -> content
+            rating: review.starRating, // starRating -> rating
+            datetime: review.ratingDate, // ratingDate -> datetime
+          }));
+          console.log("Transformed Reviews:", transformedReviews);
+          return {
+            reviews: transformedReviews,
+            totalItems: response.totalItems ?? response.items.length, // Lấy totalItems hoặc length nếu API không trả về
+            // Thêm các thông tin phân trang khác nếu cần
+          };
+        }
+        console.warn(
+          "Received unexpected structure from /book-ratings API:",
+          response
+        );
+        return { reviews: [], totalItems: 0 }; // Trả về mặc định
+      },
+      // Cung cấp tag để có thể invalidate khi có review mới hoặc liên kết với sách
+      providesTags: (result, error, { bookId }) => [
+        // Tag chung cho danh sách review của sách này (có thể thêm page nếu phân trang)
+        { type: "Review", id: `LIST-BOOK-${bookId}` },
+        // Liên kết với tag của sách để nếu sách bị xóa/cập nhật thì review cũng mất cache
+        { type: "Book", id: bookId },
+      ],
+    }),
+
+    // --- Endpoint GỬI REVIEW (Sửa lại) ---
+    addReview: builder.mutation({
+      query: ({ bookId, rating, comment }) => ({
+        url: `/book-ratings`, // <<<=== Path API tạo review (ví dụ)
+        method: "POST",
+        body: {
+          bookId: bookId,
+          // !!! Đảm bảo tên trường khớp với backend yêu cầu !!!
+          starRating: rating, // Frontend dùng `rating`, map sang `starRating`
+          comment: comment, // Frontend dùng `comment`, API cũng dùng `comment`
+        },
+      }),
+      // Làm mất hiệu lực cache của danh sách review cho sách này
+      // và cache của chính sách đó (để cập nhật ratingCount/averageRating)
+      invalidatesTags: (result, error, { bookId }) => [
+        { type: "Review", id: `LIST-BOOK-${bookId}` },
+        { type: "Book", id: bookId }, // Invalidate sách để load lại rating/count
+      ],
+    }),
+
+    submitBorrowRequest: builder.mutation({
+      query: ({ bookIds }) => ({
+        // Chỉ cần bookIds
+        url: "/Borrowings", // <<<=== Sửa path API tạo request
+        method: "POST",
+        body: {
+          // !!! Backend yêu cầu bookIds !!!
+          bookIds: bookIds,
+          // Không gửi note
+        },
+      }),
+      // Invalidate danh sách request đang chờ của user (nếu có endpoint đó)
+      invalidatesTags: [{ type: "BorrowRequest", id: "ACTIVE_LIST" }],
+    }),
     // ... các endpoints khác ...
   }),
 });
 
-export const { useGetCategoriesQuery, useGetBooksQuery } = bookApiSlice;
+export const {
+  useGetCategoriesQuery,
+  useGetBooksQuery,
+  useGetBookByIdQuery,
+  useGetBookReviewsQuery,
+  useAddReviewMutation,
+  useSubmitBorrowRequestMutation,
+} = bookApiSlice;

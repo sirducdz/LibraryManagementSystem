@@ -28,6 +28,9 @@ import BorrowingCart from "../features/cart/pages/BorrowingCart";
 import BookCatalog from "../features/books/pages/BookCatalog";
 import BookDetail from "../features/books/pages/BookDetail";
 import AboutPage from "../features/info/pages/AboutPage";
+import MyRequests from "../features/requests/pages/MyRequests";
+import RequestDetailPage from "../features/requests/pages/MyRequestDetail";
+import AdminRequestManagement from "../features/admin/pages/AdminRequestManagement";
 function AppRoutes() {
   return (
     // BrowserRouter thường được đặt ở đây hoặc trong main.jsx bao ngoài AppRoutes
@@ -69,12 +72,13 @@ function AppRoutes() {
           {/* Giả sử bạn định nghĩa PATHS.BOOK_DETAIL = "/books/:bookId" */}
           <Route path={PATHS.BOOK_DETAIL} element={<BookDetail />} />
           {/* <Route path={PATHS.BORROWING_CART} element={<BorrowingCart />} /> */}
-          {/* <Route path={PATHS.MY_REQUESTS} element={<MyRequests />} /> */}
+          <Route path={PATHS.MY_REQUESTS} element={<MyRequests />} />
+          <Route path={PATHS.MY_REQUEST_DETAIL} element={<RequestDetailPage />} />
           {/* Thêm các route chung khác nếu có: Profile, Settings... */}
           {/* <Route path={PATHS.PROFILE} element={<ProfilePage />} /> */}
           {/* Routes ONLY for Admin */}
           {/* Cấp 3: Yêu cầu thêm vai trò 'admin' */}
-          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+          <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
             {/* Lưu ý: path ở đây sẽ nối tiếp với path cha gần nhất không có index */}
             {/* Ví dụ, path="/" + "admin/dashboard" -> /admin/dashboard */}
             {/* Nếu MainLayout là element của Route path="/app" thì path sẽ là /app/admin/dashboard */}
@@ -83,6 +87,7 @@ function AppRoutes() {
                 path={PATHS.ADMIN_DASHBOARD}
                 element={<AdminDashboard />}
               /> */}
+            <Route path={PATHS.ADMIN_REQUESTS} element={<AdminRequestManagement />} />
             {/* <Route path={PATHS.ADMIN_BOOKS} element={<BookManagement />} /> */}
             {/* <Route
                 path={PATHS.ADMIN_BORROWING_REQUESTS}

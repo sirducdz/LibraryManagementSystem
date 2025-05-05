@@ -18,8 +18,10 @@ const ProtectedRoute = ({ allowedRoles }) => {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
+  console.log("user?.role", user);
+  
   // 2. Kiểm tra Authorization
-  if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
+  if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user?.roles[0])) {
      // Cần kiểm tra user có tồn tại không trước khi truy cập user.role
      console.warn(`User with role '${user?.role}' tried access restricted route`);
      return <Navigate to="/unauthorized" replace />;

@@ -22,7 +22,7 @@ const AboutPage = () => {
     <div className="p-4 md:p-8 lg:p-12 bg-gray-50 min-h-screen">
 
       {/* Sử dụng Card để tạo khung nội dung chính */}
-      <Card bordered={false} className="shadow-lg mb-8 max-w-5xl mx-auto"> {/* Giới hạn chiều rộng và căn giữa */}
+      <Card variant="borderless" className="shadow-lg mb-8 max-w-5xl mx-auto"> {/* Giới hạn chiều rộng và căn giữa */}
 
         {/* Tiêu đề trang */}
         <div className="text-center mb-10">

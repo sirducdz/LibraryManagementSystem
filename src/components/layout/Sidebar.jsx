@@ -21,6 +21,7 @@ import {
   ShoppingCartOutlined,
   SafetyCertificateOutlined,
   InfoCircleOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import { UseAuth } from "../../contexts/AuthContext"; // Adjust path if necessary
 import { PATHS } from "../../routes/routePaths"; // Adjust path if necessary
@@ -59,17 +60,17 @@ const Sidebar = ({
         // Không có 'allowedRoles' => Public cho mọi người (trong layout này)
       },
       {
-        key: "/dashboard",
+        key: PATHS.ADMIN_DASHBOARD,
         icon: <DashboardOutlined />, // Thay icon nếu muốn
         label: "Dashboard", // Already English
-        onClick: () => navigate("/dashboard"),
-        allowedRoles: ["admin", "NormalUser"], // <-- Yêu cầu đăng nhập (ví dụ)
+        onClick: () => navigate(PATHS.ADMIN_DASHBOARD),
+        allowedRoles: ["admin"], // <-- Yêu cầu đăng nhập (ví dụ)
       },
       {
-        key: "/books",
+        key: PATHS.BOOKS_CATALOG,
         icon: <BookOutlined />,
         label: "Books", // Already English
-        onClick: () => navigate("/books"),
+        onClick: () => navigate(PATHS.BOOKS_CATALOG),
         allowedRoles: ["admin", "NormalUser"], // <-- Yêu cầu đăng nhập
       },
       {
@@ -79,6 +80,22 @@ const Sidebar = ({
         label: "Borrowing Cart", // Translated
         onClick: () => navigate(PATHS.BORROWING_CART || "/borrowing-cart"), // Điều hướng đến đúng path
         allowedRoles: ["NormalUser"], // <-- Chỉ user thường
+      },
+      {
+        // Sử dụng PATHS nếu có, nếu không dùng '/borrowing-cart'
+        key: PATHS.MY_REQUESTS,
+        icon: <FileTextOutlined />,
+        label: "My Requests", // Translated
+        onClick: () => navigate(PATHS.MY_REQUESTS), // Điều hướng đến đúng path
+        allowedRoles: ["NormalUser"], // <-- Chỉ user thường
+      },
+      {
+        // Sử dụng PATHS nếu có, nếu không dùng '/borrowing-cart'
+        key: PATHS.ADMIN_REQUESTS,
+        icon: <FileTextOutlined />,
+        label: "Admin Requests", // Translated
+        onClick: () => navigate(PATHS.ADMIN_REQUESTS), // Điều hướng đến đúng path
+        allowedRoles: ["admin"], // <-- Chỉ user thường
       },
       // ... Thêm các mục protected khác với allowedRoles tương ứng ...
       {
@@ -95,14 +112,13 @@ const Sidebar = ({
         onClick: () => navigate("/reports"),
         allowedRoles: ["admin"], // <-- Chỉ Admin
       },
-      
-      {
-        key: "/settings",
-        icon: <SettingOutlined />,
-        label: "Settings", // Already English
-        onClick: () => navigate("/settings"),
-        allowedRoles: ["admin", "NormalUser"], // <-- Yêu cầu đăng nhập
-      },
+      //   {
+      //     key: "/settings",
+      //     icon: <SettingOutlined />,
+      //     label: "Settings", // Already English
+      //     onClick: () => navigate("/settings"),
+      //     allowedRoles: ["admin", "NormalUser"], // <-- Yêu cầu đăng nhập
+      //   },
       {
         key: "/about", // Ví dụ trang public khác
         icon: <InfoCircleOutlined />,
