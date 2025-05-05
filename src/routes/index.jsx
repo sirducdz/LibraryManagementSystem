@@ -31,6 +31,12 @@ import AboutPage from "../features/info/pages/AboutPage";
 import MyRequests from "../features/requests/pages/MyRequests";
 import RequestDetailPage from "../features/requests/pages/MyRequestDetail";
 import AdminRequestManagement from "../features/admin/pages/AdminRequestManagement";
+import RegisterPage from "../features/auth/pages/RegisterPage";
+import UserProfile from "../features/user/pages/UserProfile";
+import BookManagement from "../features/admin/pages/BookManagement";
+import AdminDashboard from "../features/admin/pages/Dashboard";
+import UserManagement from "../features/admin/pages/UserManagement";
+import CategoryManagementPage from "../features/admin/pages/CategoryManagementPage";
 function AppRoutes() {
   return (
     // BrowserRouter thường được đặt ở đây hoặc trong main.jsx bao ngoài AppRoutes
@@ -40,6 +46,7 @@ function AppRoutes() {
       {/* Có thể nhóm trong AuthLayout nếu cần */}
       {/* <Route element={<AuthLayout />}> */}
       <Route path={PATHS.LOGIN} element={<LoginPage />} />
+      <Route path={PATHS.REGISTER} element={<RegisterPage />} />
       <Route element={<Layout />}>
         {/* Áp dụng Layout */}
         {/* Trang chủ là public và dùng Layout */}
@@ -73,9 +80,12 @@ function AppRoutes() {
           <Route path={PATHS.BOOK_DETAIL} element={<BookDetail />} />
           {/* <Route path={PATHS.BORROWING_CART} element={<BorrowingCart />} /> */}
           <Route path={PATHS.MY_REQUESTS} element={<MyRequests />} />
-          <Route path={PATHS.MY_REQUEST_DETAIL} element={<RequestDetailPage />} />
+          <Route
+            path={PATHS.MY_REQUEST_DETAIL}
+            element={<RequestDetailPage />}
+          />
           {/* Thêm các route chung khác nếu có: Profile, Settings... */}
-          {/* <Route path={PATHS.PROFILE} element={<ProfilePage />} /> */}
+          <Route path={PATHS.PROFILE} element={<UserProfile />} />
           {/* Routes ONLY for Admin */}
           {/* Cấp 3: Yêu cầu thêm vai trò 'admin' */}
           <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
@@ -83,17 +93,19 @@ function AppRoutes() {
             {/* Ví dụ, path="/" + "admin/dashboard" -> /admin/dashboard */}
             {/* Nếu MainLayout là element của Route path="/app" thì path sẽ là /app/admin/dashboard */}
             {/* Đảm bảo định nghĩa PATHS.ADMIN_... cho đúng */}
-            {/* <Route
-                path={PATHS.ADMIN_DASHBOARD}
-                element={<AdminDashboard />}
-              /> */}
-            <Route path={PATHS.ADMIN_REQUESTS} element={<AdminRequestManagement />} />
-            {/* <Route path={PATHS.ADMIN_BOOKS} element={<BookManagement />} /> */}
+            <Route path={PATHS.ADMIN_DASHBOARD} element={<AdminDashboard />} />
+            <Route
+              path={PATHS.ADMIN_REQUESTS}
+              element={<AdminRequestManagement />}
+            />
+            <Route path={PATHS.ADMIN_BOOKS} element={<BookManagement />} />
+            <Route path={PATHS.ADMIN_CATEGORIES} element={<CategoryManagementPage />} />
+            <Route path={PATHS.ADMIN_USERS} element={<UserManagement />} />
             {/* <Route
                 path={PATHS.ADMIN_BORROWING_REQUESTS}
                 element={<BorrowingRequestManagement />}
               /> */}
-            {/* <Route path={PATHS.ADMIN_USERS} element={<UserManagement />} /> */}
+
             {/* Thêm các route admin khác */}
           </Route>
         </Route>

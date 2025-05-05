@@ -12,7 +12,8 @@ import {
   Skeleton,
   Empty,
   Badge,
-  App, // Import App để dùng useApp
+  App,
+  Divider, // Import App để dùng useApp
 } from "antd";
 import {
   ArrowRightOutlined,
@@ -32,6 +33,9 @@ import {
   useGetCategoriesQuery,
   useGetBooksQuery,
 } from "../features/books/api/bookApiSlice";
+import { GoogleLogin, useGoogleOneTapLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode"; // Thư viện giải mã JWT
+import { useGoogleSignInMutation } from "../features/auth/api/authApiSlice";
 // --- Component HomePage ---
 const HomePage = () => {
   // const [featuredBooks, setFeaturedBooks] = useState([]); // Sách nổi bật hiển thị
@@ -41,7 +45,7 @@ const HomePage = () => {
   // const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
-  const { isAuthenticated } = UseAuth(); // Lấy trạng thái đăng nhập
+  const { isAuthenticated, login: loginContext } = UseAuth(); // Lấy trạng thái đăng nhập
   const { cartItems, cartItemCount, addToCart, isInCart } = useCart();
   const { message: messageApi, modal: modalApi } = App.useApp(); // Lấy message và modal
   const {
@@ -61,71 +65,117 @@ const HomePage = () => {
     pageSize: 8, // Luôn lấy 8 cuốn cho trang chủ
   });
 
+  const [googleSignIn, { isLoading: isGoogleSigningIn }] =
+    useGoogleSignInMutation();
   const categories = useMemo(() => categoriesData || [], [categoriesData]);
   // booksData giờ đã là mảng sách nhờ transformResponse
   // const displayedBooks = useMemo(() => booksData || [], [booksData]);
-  const displayedBooks = useMemo(() => booksResponse?.books || [], [booksResponse]);
+  const displayedBooks = useMemo(
+    () => booksResponse?.books || [],
+    [booksResponse]
+  );
   console.log("displayedBooks", booksResponse);
-  
+
   const loading = isLoadingCategories || isLoadingBooks; // Loading tổng
-  // --- Giả lập Fetch dữ liệu Mock ---
-  // useEffect(() => {
-  //   setLoading(true);
-  //   // Fetch Categories Mock
-  //   const mockCategories = [
-  //     { id: 1, name: "Fiction" },
-  //     { id: 2, name: "Science" },
-  //     { id: 3, name: "History" },
-  //     { id: 4, name: "Psychology" },
-  //     { id: 5, name: "Economics" },
-  //   ];
-  //   setCategories(mockCategories);
 
-  //   // Fetch Books Mock (Lấy toàn bộ rồi xử lý sau)
-  //   setTimeout(() => {
-  //     const mockBooks = Array(55)
-  //       .fill()
-  //       .map((_, index) => ({
-  //         id: index + 1,
-  //         title: `Book ${index + 1} about Design ${String.fromCharCode(
-  //           65 + (index % 26)
-  //         )}`,
-  //         author: `Author ${(index % 7) + 1}`,
-  //         category: mockCategories[index % mockCategories.length].name,
-  //         categoryId: mockCategories[index % mockCategories.length].id,
-  //         rating: (Math.random() * 3 + 2).toFixed(1),
-  //         ratingCount: Math.floor(Math.random() * 250) + 5,
-  //         available: index % 4 !== 0,
-  //         copies: index % 4 !== 0 ? Math.floor(Math.random() * 5 + 1) : 0,
-  //         coverImage: `https://placehold.co/150x200/EDEDED/AAAAAA/png?text=Book+${
-  //           index + 1
-  //         }`,
-  //         description: `Short description about book ${index + 1}.`,
-  //         year: 2024 - (index % 10),
-  //       }));
-  //     setAllMockBooks(mockBooks);
-  //     setFeaturedBooks(mockBooks.slice(0, 8));
-  //     setLoading(false);
-  //   }, 1000);
-  // }, []);
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const googleCredential = credentialResponse.credential;
+    if (!googleCredential) {
+      messageApi.error("Google login failed: Missing credential.");
+      return;
+    }
 
-  // --- Lọc sách nổi bật theo category ---
-  // const displayedBooks = useMemo(() => {
-  //   if (!selectedCategoryId) {
-  //     return allMockBooks.slice(0, 8);
-  //   }
-  //   const filtered = allMockBooks.filter(
-  //     (book) => book.categoryId === selectedCategoryId
-  //   );
-  //   return filtered.slice(0, 8);
-  // }, [selectedCategoryId, allMockBooks]);
+    console.log("Google Credential Received:", googleCredential);
+    // Set loading indicator (optional)
+    // setLoading(true); // Có thể dùng state riêng hoặc isGoogleSigningIn
 
-  // --- Handlers ---
-  // const handleCategoryClick = (categoryId) => {
-  //   setSelectedCategoryId((prevId) =>
-  //     prevId === categoryId ? null : categoryId
-  //   );
-  // };
+    try {
+      // 1. Gọi API Backend để xác thực Google Token và lấy token của ứng dụng
+      console.log("Sending Google credential to backend...");
+      const backendResponse = await googleSignIn({
+        credential: googleCredential,
+      }).unwrap();
+      console.log("Backend verification successful:", backendResponse);
+
+      // 2. Lấy accessToken và refreshToken của *ỨNG DỤNG* từ backend response
+      const { accessToken, refreshToken } = backendResponse;
+
+      if (accessToken && refreshToken) {
+        // --- SAO CHÉP LOGIC TỪ onFinish CỦA LOGIN PAGE ---
+        let decodedUser = null;
+        try {
+          // 3. Decode accessToken của ỨNG DỤNG BẠN
+          const decodedPayload = jwtDecode(accessToken);
+          console.log("Decoded App Access Token Payload:", decodedPayload);
+          // !!! Map tên trường cho khớp token của bạn !!!
+          decodedUser = {
+            id: decodedPayload.nameid || null,
+            username: decodedPayload.unique_name || null,
+            email: decodedPayload.email || null,
+            roles: decodedPayload.role ? [decodedPayload.role] : [],
+            name: decodedPayload.name || decodedPayload.unique_name,
+            avatarUrl: decodedPayload.picture,
+          };
+          if (!decodedUser.id) {
+            throw new Error("Missing user ID in app token");
+          }
+        } catch (decodeError) {
+          console.error("Failed to decode app access token:", decodeError);
+          messageApi.error("Login failed: Invalid application token received.");
+          // setLoading(false); // Tắt loading nếu có
+          return; // Dừng lại nếu không decode được
+        }
+
+        // 4. Lưu vào localStorage (RememberMe = true)
+        try {
+          localStorage.setItem("accessToken", accessToken);
+          localStorage.setItem("refreshToken", refreshToken);
+          localStorage.setItem("userData", JSON.stringify(decodedUser));
+          console.log(`Credentials from Google Sign-In saved to localStorage.`);
+        } catch (storageError) {
+          console.error("Failed to save to localStorage:", storageError);
+          // Có thể không cần dừng hẳn, nhưng cần biết lỗi
+        }
+
+        // 5. Cập nhật AuthContext
+        loginContext(decodedUser, accessToken); // <<<=== GỌI HÀM LOGIN CỦA CONTEXT
+
+        messageApi.success(`Welcome, ${decodedUser.name}!`);
+        // Không cần navigate, useEffect trong AuthContext hoặc LoginPage sẽ xử lý
+      } else {
+        console.error(
+          "Backend response missing app tokens after Google Sign-In."
+        );
+        messageApi.error("Login failed: Invalid response from server.");
+      }
+    } catch (err) {
+      console.error("Google Sign-In backend call failed:", err);
+      messageApi.error(
+        err?.data?.message || "Google Sign-In failed. Please try again."
+      );
+    } finally {
+      // setLoading(false); // Tắt loading nếu có
+    }
+  };
+
+  // Hàm xử lý lỗi từ Google
+  const handleGoogleError = () => {
+    console.error("Google Login Failed");
+    messageApi.error("Google Sign-In failed. Please try again.");
+  };
+
+  // --- Hook cho Google One Tap ---
+  // Sẽ tự động hiển thị prompt nếu user đang đăng nhập Google trên trình duyệt
+  // và chưa đăng xuất khỏi web của bạn bằng Google trước đó.
+  // Chỉ gọi hook này khi người dùng CHƯA đăng nhập vào hệ thống của bạn.
+  useGoogleOneTapLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: handleGoogleError,
+    disabled: isAuthenticated || isGoogleSigningIn, // <<<=== Vô hiệu hóa nếu đã đăng nhập
+    // prompt_parent_id: 'oneTapContainer', // ID của div nếu muốn tùy chỉnh vị trí prompt
+    // cancel_on_tap_outside: false, // Mặc định là false
+  });
+
   const handleCategoryClick = (categoryId) => {
     setSelectedCategoryId((prevId) =>
       prevId === categoryId ? null : categoryId
@@ -215,6 +265,34 @@ const HomePage = () => {
               </Button>
             </Badge>
           </div>
+          {!isAuthenticated && (
+            <div className="mt-10">
+              <Divider className="!bg-white/30" /> {/* Thêm đường ngăn cách */}
+              <Text className="!text-indigo-200 text-sm mb-4 block">
+                Or sign in with
+              </Text>
+              <div className="flex justify-center items-center gap-4">
+                {/* Nút Google Sign-In */}
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  // Tùy chỉnh giao diện nút nếu muốn
+                  // theme="outline"
+                  // size="large"
+                  // shape="rectangular"
+                  // width="250px"
+                  useOneTap={false} // Không dùng One Tap cho nút
+                  disabled={isGoogleSigningIn}
+                />
+                {isGoogleSigningIn && <Spin />}
+                {/* Có thể thêm nút Đăng nhập/Đăng ký thông thường ở đây */}
+                {/* <Button size="large" onClick={() => navigate(PATHS.LOGIN)} icon={<LoginOutlined />}> Login </Button> */}
+                {/* <Button size="large" type="primary" ghost onClick={() => navigate(PATHS.REGISTER)} icon={<UserAddOutlined />}> Register </Button> */}
+              </div>
+              {/* Container cho One Tap (tùy chọn) */}
+              {/* <div id="oneTapContainer" style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 1001 }}></div> */}
+            </div>
+          )}
         </div>
       </section>
 

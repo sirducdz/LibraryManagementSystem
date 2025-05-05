@@ -28,12 +28,13 @@ export const PATHS = {
   
     // --- Admin Only Paths (Chỉ Admin được truy cập) ---
     ADMIN_DASHBOARD: '/admin/dashboard',             // Màn hình Dashboard Admin [cite: 71]
+    ADMIN_BOOK_MANAGEMENT: '/admin/books',             // Màn hình Dashboard Admin [cite: 71]
     ADMIN_CATEGORIES: '/admin/categories',           // Màn hình Quản lý Danh mục [cite: 64]
     ADMIN_BOOKS: '/admin/books',                   // Màn hình Quản lý Sách [cite: 66]
     ADMIN_REQUESTS: '/admin/requests',             // Màn hình Quản lý Yêu cầu Mượn [cite: 67]
     ADMIN_USERS: '/admin/users',                   // Màn hình Quản lý Người dùng [cite: 69]
     ADMIN_REPORTS: '/admin/reports',                 // Màn hình Báo cáo [cite: 72]
-    ADMIN_LOGS: '/admin/logs',                     // Màn hình Log Hoạt động [cite: 73]
+    // ADMIN_LOGS: '/admin/logs',                     // Màn hình Log Hoạt động [cite: 73]
   
     // Lưu ý: ':bookId' là một tham số động (dynamic parameter) trong URL.
     // Khi tạo link, bạn cần thay thế nó bằng ID thực tế.

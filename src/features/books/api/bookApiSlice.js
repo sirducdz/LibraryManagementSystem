@@ -286,6 +286,85 @@ export const bookApiSlice = createApi({
       // Invalidate danh sách request đang chờ của user (nếu có endpoint đó)
       invalidatesTags: [{ type: "BorrowRequest", id: "ACTIVE_LIST" }],
     }),
+
+    addBook: builder.mutation({
+      // newBookData từ component sẽ chứa các giá trị form
+      query: (newBookData) => ({
+        url: "/Books", // <<<=== Path API POST sách
+        method: "POST",
+        // *** Body khớp với cấu trúc API yêu cầu ***
+        body: {
+          title: newBookData.title,
+          author: newBookData.author,
+          isbn: newBookData.isbn,
+          publisher: newBookData.publisher,
+          // Chuyển đổi năm sang số nếu cần và API yêu cầu số
+          publicationYear: newBookData.publicationYear
+            ? parseInt(newBookData.publicationYear, 10)
+            : null,
+          description: newBookData.description,
+          // Xử lý coverImageUrl: cần lấy URL sau khi upload, tạm thời gửi null hoặc string rỗng
+          coverImageUrl: newBookData.coverImageUrl || null, // Hoặc lấy từ logic upload file
+          categoryID: newBookData.categoryId, // Map từ categoryId của form
+          // Lấy totalQuantity từ form (component cần thêm field này)
+          totalQuantity: newBookData.totalQuantity
+            ? parseInt(newBookData.totalQuantity, 10)
+            : 0, // Mặc định là 0 nếu không nhập
+        },
+      }),
+      // Làm mới danh sách sách sau khi thêm
+      invalidatesTags: [{ type: "Book", id: "LIST" }],
+    }),
+
+    // --- Update Existing Book (CẬP NHẬT) ---
+    updateBook: builder.mutation({
+      // Nhận object { id, ...updatedData } từ component
+      query: ({ id, ...updatedData }) => ({
+        url: `/Books/${id}`, // <<<=== Path API PUT sách
+        method: "PUT",
+        // *** Body khớp với cấu trúc API yêu cầu ***
+        body: {
+          title: updatedData.title,
+          author: updatedData.author,
+          isbn: updatedData.isbn,
+          publisher: updatedData.publisher,
+          publicationYear: updatedData.publicationYear
+            ? parseInt(updatedData.publicationYear, 10)
+            : null,
+          description: updatedData.description,
+          coverImageUrl: updatedData.coverImageUrl || null, // Xử lý cover image URL
+          categoryID: updatedData.categoryId, // Map từ categoryId
+          totalQuantity: updatedData.totalQuantity
+            ? parseInt(updatedData.totalQuantity, 10)
+            : 0, // Lấy totalQuantity
+        },
+      }),
+      // Làm mới danh sách và cache của sách cụ thể này
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Book", id: "LIST" },
+        { type: "Book", id },
+      ],
+    }),
+
+    // --- Delete Book (CẬP NHẬT) ---
+    deleteBook: builder.mutation({
+      // Nhận id của sách cần xóa
+      query: (id) => ({
+        url: `/Books/${id}`, // <<<=== Path API DELETE sách
+        method: "DELETE",
+        // Không cần body
+      }),
+      // Làm mới danh sách và xóa cache của sách cụ thể này
+      // Lưu ý: invalidatesTags không tự xóa item khỏi cache, nó chỉ đánh dấu là cũ
+      // để lần gọi getBooks/getBookById tiếp theo sẽ fetch lại.
+      // RTK Query sẽ tự động xóa item khỏi cache nếu query getBookById(id) bị unsubscribe.
+      // Nếu muốn xóa ngay lập tức khỏi list trên UI mà không cần fetch lại list, cần xử lý phức tạp hơn bằng `onQueryStarted` và `updateQueryData`.
+      // Cách đơn giản là để invalidateTags làm mới LIST.
+      invalidatesTags: (result, error, id) => [
+        { type: "Book", id: "LIST" },
+        { type: "Book", id },
+      ],
+    }),
     // ... các endpoints khác ...
   }),
 });
@@ -297,4 +376,7 @@ export const {
   useGetBookReviewsQuery,
   useAddReviewMutation,
   useSubmitBorrowRequestMutation,
+  useAddBookMutation, // <<<=== Hook thêm sách
+  useUpdateBookMutation, // <<<=== Hook sửa sách
+  useDeleteBookMutation, // <<<=== Hook xóa sách
 } = bookApiSlice;

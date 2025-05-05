@@ -32,6 +32,7 @@ import { Provider as ReduxProvider } from "react-redux";
 import { store } from "./store";
 import { CartProvider } from "./contexts/CartContext";
 import { App } from "antd";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 // 4. Lấy phần tử DOM gốc từ index.html
 const rootElement = document.getElementById("root");
 
@@ -39,21 +40,23 @@ const rootElement = document.getElementById("root");
 // Kiểm tra xem rootElement có tồn tại không trước khi render
 if (rootElement) {
   createRoot(rootElement).render(
-    // 6. Bọc ứng dụng bằng StrictMode (khuyến nghị cho dev)
-    <ReduxProvider store={store}>
-      {/* ReduxProvider nếu có store Redux */}
-      <BrowserRouter>
-        {/* 7. Bọc ứng dụng bằng các Provider toàn cục */}
-        {/* AuthProvider cần bao ngoài App để toàn bộ App truy cập được context */}
-        <App>
-          <CartProvider>
-            <AuthProvider>
-            <AppRoutes />
-            </AuthProvider>
-          </CartProvider>
-        </App>
-      </BrowserRouter>
-    </ReduxProvider>
+    <GoogleOAuthProvider clientId="632098216791-g9uultf9h5c6770nl05kq7bp8cee39va.apps.googleusercontent.com">
+      {/* // 6. Bọc ứng dụng bằng StrictMode (khuyến nghị cho dev) */}
+      <ReduxProvider store={store}>
+        {/* ReduxProvider nếu có store Redux */}
+        <BrowserRouter>
+          {/* 7. Bọc ứng dụng bằng các Provider toàn cục */}
+          {/* AuthProvider cần bao ngoài App để toàn bộ App truy cập được context */}
+          <App>
+            <CartProvider>
+              <AuthProvider>
+                <AppRoutes />
+              </AuthProvider>
+            </CartProvider>
+          </App>
+        </BrowserRouter>
+      </ReduxProvider>
+    </GoogleOAuthProvider>
   );
 } else {
   console.error(

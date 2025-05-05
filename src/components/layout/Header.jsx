@@ -60,11 +60,11 @@ const Header = ({ collapsed, setCollapsed, isAuthenticated, user }) => {
       icon: <UserOutlined />,
       label: "My Profile",
     },
-    {
-      key: "settings",
-      icon: <SettingOutlined />,
-      label: "Settings",
-    },
+    // {
+    //   key: "settings",
+    //   icon: <SettingOutlined />,
+    //   label: "Settings",
+    // },
     {
       type: "divider",
     },

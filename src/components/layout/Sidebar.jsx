@@ -43,13 +43,30 @@ const Sidebar = ({
   // Bỏ <string[]>
   const [selectedKeys, setSelectedKeys] = useState([]);
 
-  useEffect(() => {
-    const pathSegments = location.pathname.split("/").filter(Boolean); // Lọc bỏ phần tử rỗng
-    const currentKey = `/${pathSegments[0] || ""}`; // Lấy key cấp 1
-    // Use root path '/' if it matches, otherwise use the derived key
-    setSelectedKeys([currentKey === "//" ? "/" : currentKey]); // Xử lý trường hợp chỉ có '/'
-  }, [location.pathname]); // Dependency on pathname
+  //   useEffect(() => {
+  //     const pathSegments = location.pathname.split("/").filter(Boolean); // Lọc bỏ phần tử rỗng
+  //     const currentKey = `/${pathSegments[0] || ""}`; // Lấy key cấp 1
+  //     // Use root path '/' if it matches, otherwise use the derived key
+  //     setSelectedKeys([currentKey === "//" ? "/" : currentKey]); // Xử lý trường hợp chỉ có '/'
+  //   }, [location.pathname]); // Dependency on pathname
 
+  useEffect(() => {
+    const currentPath = location.pathname;
+    // Mặc định dùng path hiện tại làm key
+    let keyToSelect = currentPath;
+
+    // Xử lý trường hợp đặc biệt cho trang chủ
+    if (currentPath === "/") {
+      keyToSelect = PATHS.HomePage || "/"; // Dùng key của HomePage nếu là trang gốc
+    }
+    // Có thể thêm các xử lý khác nếu path của bạn phức tạp hơn (ví dụ: /a/b/c)
+    // và bạn muốn highlight key /a/b
+
+    console.log(
+      `Sidebar Effect: Pathname = ${currentPath}, Setting selectedKey = ${keyToSelect}`
+    );
+    setSelectedKeys([keyToSelect]); // Đặt mảng selectedKeys với key đã xác định
+  }, [location.pathname]);
   const allMenuItems = useMemo(
     () => [
       {
@@ -60,18 +77,18 @@ const Sidebar = ({
         // Không có 'allowedRoles' => Public cho mọi người (trong layout này)
       },
       {
+        key: PATHS.BOOKS_CATALOG,
+        icon: <BookOutlined />,
+        label: "Books", // Already English
+        onClick: () => navigate(PATHS.BOOKS_CATALOG),
+        allowedRoles: ["NormalUser"], // <-- Yêu cầu đăng nhập , "admin",
+      },
+      {
         key: PATHS.ADMIN_DASHBOARD,
         icon: <DashboardOutlined />, // Thay icon nếu muốn
         label: "Dashboard", // Already English
         onClick: () => navigate(PATHS.ADMIN_DASHBOARD),
         allowedRoles: ["admin"], // <-- Yêu cầu đăng nhập (ví dụ)
-      },
-      {
-        key: PATHS.BOOKS_CATALOG,
-        icon: <BookOutlined />,
-        label: "Books", // Already English
-        onClick: () => navigate(PATHS.BOOKS_CATALOG),
-        allowedRoles: ["admin", "NormalUser"], // <-- Yêu cầu đăng nhập
       },
       {
         // Sử dụng PATHS nếu có, nếu không dùng '/borrowing-cart'
@@ -97,21 +114,46 @@ const Sidebar = ({
         onClick: () => navigate(PATHS.ADMIN_REQUESTS), // Điều hướng đến đúng path
         allowedRoles: ["admin"], // <-- Chỉ user thường
       },
+      {
+        // --- THÊM BOOK MANAGEMENT ---
+        key: PATHS.ADMIN_BOOK_MANAGEMENT || "/admin/books", // <<< Define this path
+        icon: <BookOutlined />, // Hoặc <EditOutlined />
+        label: "Book Management",
+        onClick: () => navigate(PATHS.ADMIN_BOOK_MANAGEMENT || "/admin/books"),
+        allowedRoles: ["admin"], // <<< Chỉ Admin
+      },
+      {
+        // --- CATEGORY MANAGEMENT ---
+        key: PATHS.ADMIN_CATEGORIES || "/admin/categories", // <<< Path quản lý category
+        icon: <TagsOutlined />,
+        label: "Category Management",
+        onClick: () =>
+          navigate(PATHS.ADMIN_CATEGORIES || "/admin/categories"),
+        allowedRoles: ["admin"],
+      },
+      {
+        // --- THÊM USER MANAGEMENT ---
+        key: PATHS.ADMIN_USERS || "/admin/users", // <<< Define this path
+        icon: <TeamOutlined />,
+        label: "User Management",
+        onClick: () => navigate(PATHS.ADMIN_USERS || "/admin/users"),
+        allowedRoles: ["admin"], // <<< Chỉ Admin
+      },
       // ... Thêm các mục protected khác với allowedRoles tương ứng ...
-      {
-        key: "/staff",
-        icon: <SafetyCertificateOutlined />,
-        label: "Staff Management", // Already English
-        onClick: () => navigate("/staff"),
-        allowedRoles: ["admin"], // <-- Chỉ Admin
-      },
-      {
-        key: "/reports",
-        icon: <BarChartOutlined />,
-        label: "Reports", // Already English
-        onClick: () => navigate("/reports"),
-        allowedRoles: ["admin"], // <-- Chỉ Admin
-      },
+      //   {
+      //     key: "/staff",
+      //     icon: <SafetyCertificateOutlined />,
+      //     label: "Staff Management", // Already English
+      //     onClick: () => navigate("/staff"),
+      //     allowedRoles: ["admin"], // <-- Chỉ Admin
+      //   },
+      //   {
+      //     key: "/reports",
+      //     icon: <BarChartOutlined />,
+      //     label: "Reports", // Already English
+      //     onClick: () => navigate("/reports"),
+      //     allowedRoles: ["admin"], // <-- Chỉ Admin
+      //   },
       //   {
       //     key: "/settings",
       //     icon: <SettingOutlined />,

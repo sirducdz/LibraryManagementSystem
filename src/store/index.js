@@ -7,6 +7,7 @@ import { authApiSlice } from "../features/auth/api/authApiSlice";
 import authReducer from "../features/auth/authSlice";
 import { bookApiSlice } from "../features/books/api/bookApiSlice";
 import { requestApiSlice } from "../features/requests/api/requestApiSlice";
+import { categoryApiSlice } from '../features/admin/api/categoryApiSlice';
 // Import các reducer khác (ví dụ: authSlice để lưu token/user state)
 // import authReducer from '../features/auth/authSlice';
 
@@ -17,6 +18,7 @@ export const store = configureStore({
     auth: authReducer,
     [bookApiSlice.reducerPath]: bookApiSlice.reducer,
     [requestApiSlice.reducerPath]: requestApiSlice.reducer, 
+    [categoryApiSlice.reducerPath]: categoryApiSlice.reducer,
     // Thêm reducer của authSlice (nếu có)
     // auth: authReducer,
     // ... các reducer khác
@@ -26,7 +28,8 @@ export const store = configureStore({
       authApiSlice.middleware, // Thêm middleware của authApiSlice
       // ... các middleware khác nếu có
       bookApiSlice.middleware ,
-      requestApiSlice.middleware // Thêm middleware của requestApiSlice
+      requestApiSlice.middleware, // Thêm middleware của requestApiSlice
+      categoryApiSlice.middleware
     ),
 });
 
