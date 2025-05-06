@@ -17,15 +17,12 @@ export const categoryApiSlice = createApi({
           PageSize: pageSize.toString(),
         });
         if (searchTerm) params.append("SearchTerm", searchTerm); // Backend dùng SearchTerm
+        console.log("sorter", sorter);
 
         // Xử lý Sorter
         let sortBy = sorter?.field;
         let sortOrder =
-          sorter?.order === "ascend"
-            ? "asc"
-            : sorter?.order === "descend"
-            ? "desc"
-            : null;
+          sorter === "asc" ? "asc" : sorter === "desc" ? "desc" : null;
         // Map tên cột sort nếu cần (ví dụ: 'name' -> 'Name', 'createdAt' -> 'CreatedAt')
         // Giả sử backend chấp nhận 'Name' và 'CreatedAt'
         if (sortBy === "name") sortBy = "Name";

@@ -37,6 +37,7 @@ import BookManagement from "../features/admin/pages/BookManagement";
 import AdminDashboard from "../features/admin/pages/Dashboard";
 import UserManagement from "../features/admin/pages/UserManagement";
 import CategoryManagementPage from "../features/admin/pages/CategoryManagementPage";
+import NotFoundPage from "../pages/NotFoundPage";
 function AppRoutes() {
   return (
     // BrowserRouter thường được đặt ở đây hoặc trong main.jsx bao ngoài AppRoutes
@@ -113,7 +114,7 @@ function AppRoutes() {
       </Route>
       {/* Kết thúc ProtectedRoute */}
       {/* === Not Found Route === */}
-      {/* <Route path="*" element={<NotFoundPage />} /> */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

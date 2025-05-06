@@ -12,6 +12,7 @@ export const PATHS = {
     HomePage: '/homepage',                             // Màn hình Đăng nhập [cite: 55]
     REGISTER: '/register',                         // Màn hình Đăng ký (Thường đi kèm Login)
     FORGOT_PASSWORD: '/forgot-password',           // Màn hình Quên mật khẩu (Thường đi kèm Login)
+    NOTFOUND: '/notfound',                 // Màn hình báo lỗi không có quyền truy cập
     UNAUTHORIZED: '/unauthorized',                 // Màn hình báo lỗi không có quyền truy cập
   
     // --- User Authenticated Paths (Cần đăng nhập - Cả User và Admin) ---

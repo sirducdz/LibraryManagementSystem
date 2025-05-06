@@ -181,7 +181,7 @@ const AdminDashboard = () => {
       title: "Thao tác",
       key: "action",
       render: (_, record) => (
-        <Link to={`/admin/borrowing-requests/${record.id}`}>
+        <Link to={`/admin/requests/${record.id}`}>
           <Button type="link">Chi tiết</Button>
         </Link>
       ),
@@ -266,7 +266,7 @@ const AdminDashboard = () => {
             title={
               <div className="flex justify-between items-center">
                 <span>Yêu cầu mượn sách gần đây</span>
-                <Link to="/admin/borrowing-requests">
+                <Link to="/admin/requests">
                   <Button type="primary" size="small">
                     Xem tất cả
                   </Button>

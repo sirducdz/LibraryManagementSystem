@@ -111,7 +111,7 @@ const CategoryManagementPage = () => {
           : tableParams.sorter?.field === "createdAt"
           ? "CreatedAt"
           : "Name", // Default Name
-      order:
+      sorter:
         tableParams.sorter?.order === "ascend"
           ? "asc"
           : tableParams.sorter?.order === "descend"
@@ -202,6 +202,8 @@ const CategoryManagementPage = () => {
 
   // Table change handler
   const handleTableChange = (pagination, filters, sorter) => {
+    // console.log("sorter", sorter);
+
     setTableParams({
       pagination: {
         current: pagination.current,
